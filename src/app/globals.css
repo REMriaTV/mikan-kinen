@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+:root {
+  --bg-deep: #0a0a0c;
+  --bg-card: #111116;
+  --bg-card-hover: #18181e;
+  --text-primary: #e8e4df;
+  --text-secondary: #8a8680;
+  --text-dim: #555250;
+  --accent-gold: #c9a84c;
+  --accent-warm: #d4714e;
+  --tag-green: #2d6a4f;
+  --tag-green-text: #95d5b2;
+  --tag-blue: #1d3557;
+  --tag-blue-text: #a8dadc;
+  --tag-purple: #3c1642;
+  --tag-purple-text: #c77dff;
+  --tag-orange: #6b3410;
+  --tag-orange-text: #f4a261;
+}
+
+@theme inline {
+  --color-deep: var(--bg-deep);
+  --color-card: var(--bg-card);
+  --color-card-hover: var(--bg-card-hover);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-dim: var(--text-dim);
+  --color-gold: var(--accent-gold);
+  --color-warm: var(--accent-warm);
+  --font-shippori: var(--font-shippori);
+  --font-zen-kaku: var(--font-zen-kaku);
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg-deep);
+}
+
+body {
+  font-family: var(--font-zen-kaku), "Zen Kaku Gothic New", sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* ===== COLOR BARS ===== */
+.color-bar {
+  background: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff8800 10%,
+    #ffff00 20%,
+    #88ff00 30%,
+    #00ff00 38%,
+    #00ff88 46%,
+    #00ffff 54%,
+    #0088ff 62%,
+    #0000ff 70%,
+    #8800ff 80%,
+    #ff00ff 90%,
+    #ff0088 100%
+  );
+}
+
+.color-bar-bottom {
+  background: linear-gradient(
+    90deg,
+    #ff0088 0%,
+    #ff00ff 10%,
+    #8800ff 20%,
+    #0000ff 30%,
+    #0088ff 38%,
+    #00ffff 46%,
+    #00ff88 54%,
+    #00ff00 62%,
+    #88ff00 70%,
+    #ffff00 80%,
+    #ff8800 90%,
+    #ff0000 100%
+  );
+}
+
+/* ===== NOISE OVERLAY ===== */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.bg-deep {
+  background-color: var(--bg-deep);
+}
+.bg-card {
+  background-color: var(--bg-card);
+}
+.bg-card-hover {
+  background-color: var(--bg-card-hover);
+}
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-dim {
+  color: var(--text-dim);
+}
+.text-gold {
+  color: var(--accent-gold);
+}
+.text-warm {
+  color: var(--accent-warm);
+}
+.border-gold {
+  border-color: var(--accent-gold);
+}
+.bg-gold {
+  background-color: var(--accent-gold);
+}
+
+/* ===== FONT FAMILIES ===== */
+.font-shippori {
+  font-family: var(--font-shippori), "Shippori Mincho", serif;
+}
+.font-zen {
+  font-family: var(--font-zen-kaku), "Zen Kaku Gothic New", sans-serif;
+}
+
+/* ===== DIVIDER ===== */
+.divider {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--text-dim), transparent);
+  opacity: 0.3;
+}
+
+.divider-wide {
+  max-width: 900px;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(6px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1.5s ease both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
