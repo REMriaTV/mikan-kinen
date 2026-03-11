@@ -11,20 +11,26 @@
   :root {
     --bg-deep: #0a0a0c;
     --bg-card: #111116;
+    --bg-card-hover: #18181e;
     --text-primary: #e8e4df;
     --text-secondary: #8a8680;
     --text-dim: #555250;
     --accent-gold: #c9a84c;
     --accent-warm: #d4714e;
+    --tag-green: #2d6a4f;
+    --tag-green-text: #95d5b2;
+    --tag-blue: #1d3557;
+    --tag-blue-text: #a8dadc;
+    --tag-purple: #3c1642;
+    --tag-purple-text: #c77dff;
+    --tag-orange: #6b3410;
+    --tag-orange-text: #f4a261;
     --bar-h: 6px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html {
-    scroll-behavior: smooth;
-    background: var(--bg-deep);
-  }
+  html { scroll-behavior: smooth; background: var(--bg-deep); }
 
   body {
     font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -34,383 +40,328 @@
     overflow-x: hidden;
   }
 
-  /* ===== COLOR BAR (Lemuria TV identity) ===== */
+  /* ===== COLOR BAR ===== */
   .color-bar {
-    width: 100%;
-    height: var(--bar-h);
-    background: linear-gradient(
-      90deg,
+    width: 100%; height: var(--bar-h);
+    background: linear-gradient(90deg,
       #ff0000 0%, #ff8800 10%, #ffff00 20%, #88ff00 30%,
       #00ff00 38%, #00ff88 46%, #00ffff 54%, #0088ff 62%,
-      #0000ff 70%, #8800ff 80%, #ff00ff 90%, #ff0088 100%
-    );
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
+      #0000ff 70%, #8800ff 80%, #ff00ff 90%, #ff0088 100%);
+    position: fixed; top: 0; left: 0; z-index: 1000;
   }
-
   .color-bar-bottom {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: var(--bar-h);
-    background: linear-gradient(
-      90deg,
+    position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bar-h);
+    background: linear-gradient(90deg,
       #ff0088 0%, #ff00ff 10%, #8800ff 20%, #0000ff 30%,
       #0088ff 38%, #00ffff 46%, #00ff88 54%, #00ff00 62%,
-      #88ff00 70%, #ffff00 80%, #ff8800 90%, #ff0000 100%
-    );
+      #88ff00 70%, #ffff00 80%, #ff8800 90%, #ff0000 100%);
     z-index: 1000;
   }
 
-  /* ===== NOISE OVERLAY ===== */
+  /* ===== NOISE ===== */
   body::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
+    content: ''; position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
+    pointer-events: none; z-index: 999;
   }
 
-  /* ===== HEADER / HERO ===== */
+  /* ===== HERO ===== */
   .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 80px 24px 60px;
-    position: relative;
+    min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    padding: 80px 24px 60px; position: relative;
   }
-
   .network-id {
-    font-size: 0.7rem;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
     animation: fadeIn 1.5s ease 0.3s both;
   }
-
-  .network-id span {
-    color: var(--accent-gold);
-  }
-
+  .network-id span { color: var(--accent-gold); }
   .hero-badge {
-    display: inline-block;
-    border: 1px solid var(--accent-gold);
-    color: var(--accent-gold);
-    font-size: 0.65rem;
-    letter-spacing: 0.35em;
-    padding: 6px 20px;
-    margin-bottom: 40px;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
+    display: inline-block; border: 1px solid var(--accent-gold);
+    color: var(--accent-gold); font-size: 0.65rem; letter-spacing: 0.35em;
+    padding: 6px 20px; margin-bottom: 40px;
     animation: fadeIn 1.5s ease 0.6s both;
   }
-
   .hero-title {
-    font-family: 'Shippori Mincho', serif;
-    font-weight: 800;
-    font-size: clamp(1.8rem, 5vw, 3.2rem);
-    line-height: 1.4;
-    margin-bottom: 8px;
+    font-family: 'Shippori Mincho', serif; font-weight: 800;
+    font-size: clamp(1.8rem, 5vw, 3.2rem); line-height: 1.4; margin-bottom: 8px;
     animation: fadeIn 1.5s ease 0.9s both;
   }
-
   .hero-subtitle {
-    font-family: 'Shippori Mincho', serif;
-    font-weight: 400;
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-    color: var(--text-secondary);
-    margin-bottom: 48px;
-    animation: fadeIn 1.5s ease 1.1s both;
+    font-family: 'Shippori Mincho', serif; font-weight: 400;
+    font-size: clamp(1rem, 2.5vw, 1.5rem); color: var(--text-secondary);
+    margin-bottom: 48px; animation: fadeIn 1.5s ease 1.1s both;
   }
-
   .hero-date {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.3em;
-    color: var(--text-dim);
+    font-size: 0.8rem; letter-spacing: 0.3em; color: var(--text-dim);
     animation: fadeIn 1.5s ease 1.4s both;
   }
-
-  .hero-date strong {
-    color: var(--text-primary);
-    font-size: 1.1rem;
-  }
-
+  .hero-date strong { color: var(--text-primary); font-size: 1.1rem; }
   .hero-catch {
-    max-width: 520px;
-    margin: 48px auto 0;
+    max-width: 520px; margin: 48px auto 0;
     animation: fadeIn 1.5s ease 1.7s both;
   }
-
   .hero-catch p {
-    font-family: 'Shippori Mincho', serif;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 2.2;
-    letter-spacing: 0.05em;
+    font-family: 'Shippori Mincho', serif; font-size: 0.95rem;
+    color: var(--text-secondary); line-height: 2.2; letter-spacing: 0.05em;
   }
-
-  /* ===== SCROLL INDICATOR ===== */
   .scroll-hint {
-    position: absolute;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
     animation: fadeIn 1.5s ease 2.2s both, float 3s ease-in-out infinite 2.5s;
   }
-
-  .scroll-hint svg {
-    width: 20px;
-    height: 20px;
-    stroke: var(--text-dim);
-    stroke-width: 1.5;
-    fill: none;
-  }
+  .scroll-hint svg { width: 20px; height: 20px; stroke: var(--text-dim); stroke-width: 1.5; fill: none; }
 
   /* ===== SECTIONS ===== */
-  .section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 80px 24px;
-  }
-
+  .section { max-width: 680px; margin: 0 auto; padding: 80px 24px; }
+  .section-wide { max-width: 900px; margin: 0 auto; padding: 80px 24px; }
   .section-label {
-    font-size: 0.6rem;
-    letter-spacing: 0.5em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.6rem; letter-spacing: 0.5em; color: var(--text-dim);
+    text-transform: uppercase; margin-bottom: 8px;
   }
-
   .section-title {
-    font-family: 'Shippori Mincho', serif;
-    font-weight: 700;
-    font-size: clamp(1.3rem, 3vw, 1.8rem);
-    margin-bottom: 32px;
-    line-height: 1.5;
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: clamp(1.3rem, 3vw, 1.8rem); margin-bottom: 32px; line-height: 1.5;
   }
-
-  .section p {
-    color: var(--text-secondary);
-    font-size: 0.92rem;
-    margin-bottom: 20px;
-    line-height: 2;
-  }
+  .section p { color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 20px; line-height: 2; }
 
   /* ===== DIVIDER ===== */
   .divider {
-    width: 100%;
-    max-width: 680px;
-    margin: 0 auto;
-    height: 1px;
+    width: 100%; max-width: 680px; margin: 0 auto; height: 1px;
     background: linear-gradient(90deg, transparent, var(--text-dim), transparent);
     opacity: 0.3;
   }
+  .divider-wide { max-width: 900px; }
 
-  /* ===== STATS BAR ===== */
+  /* ===== STATS ===== */
   .stats-bar {
-    display: flex;
-    justify-content: center;
-    gap: 48px;
-    flex-wrap: wrap;
-    padding: 60px 24px;
-    max-width: 680px;
-    margin: 0 auto;
+    display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+    padding: 60px 24px; max-width: 680px; margin: 0 auto;
   }
-
-  .stat {
-    text-align: center;
-  }
-
+  .stat { text-align: center; }
   .stat-number {
-    font-family: 'Shippori Mincho', serif;
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: var(--accent-gold);
-    line-height: 1;
+    font-family: 'Shippori Mincho', serif; font-size: 2.4rem;
+    font-weight: 800; color: var(--accent-gold); line-height: 1;
+  }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.15em; margin-top: 8px; }
+
+  /* ===== WORKS CATALOG ===== */
+  .works-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    margin-top: 16px;
   }
 
-  .stat-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    letter-spacing: 0.15em;
-    margin-top: 8px;
+  .work-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 28px 32px;
+    transition: all 0.3s ease;
+    cursor: default;
+    position: relative;
   }
 
-  /* ===== WORKS TICKER ===== */
-  .ticker-section {
-    overflow: hidden;
-    padding: 40px 0;
-    border-top: 1px solid rgba(255,255,255,0.04);
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+  .work-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(201, 168, 76, 0.15);
   }
 
-  .ticker-track {
+  .work-card-header {
     display: flex;
-    gap: 40px;
-    animation: scroll 40s linear infinite;
-    width: max-content;
-  }
-
-  .ticker-item {
-    font-family: 'Shippori Mincho', serif;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    white-space: nowrap;
-    transition: color 0.3s;
-  }
-
-  .ticker-item::before {
-    content: '◇ ';
-    color: var(--accent-gold);
-    opacity: 0.4;
-  }
-
-  .ticker-item.completed {
-    color: var(--text-secondary);
-  }
-
-  .ticker-item.completed::before {
-    content: '◆ ';
-    opacity: 0.7;
-  }
-
-  /* ===== PROGRAM ===== */
-  .program-list {
-    list-style: none;
-    counter-reset: program;
-  }
-
-  .program-list li {
-    counter-increment: program;
-    padding: 20px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    display: flex;
-    gap: 20px;
     align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
   }
 
-  .program-list li::before {
-    content: counter(program, decimal-leading-zero);
+  .work-number {
     font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--accent-gold);
     letter-spacing: 0.1em;
+    opacity: 0.6;
     flex-shrink: 0;
+    min-width: 28px;
   }
 
-  .program-content {
+  .work-title {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    line-height: 1.4;
     flex: 1;
   }
 
-  .program-content strong {
-    font-family: 'Shippori Mincho', serif;
-    font-weight: 700;
-    font-size: 1rem;
-    display: block;
-    margin-bottom: 4px;
+  .work-tags {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
   }
 
-  .program-content span {
-    font-size: 0.8rem;
+  .tag {
+    font-size: 0.6rem;
+    padding: 2px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  .tag-kubun {
+    background: var(--tag-blue);
+    color: var(--tag-blue-text);
+  }
+  .tag-seisaku {
+    background: var(--tag-purple);
+    color: var(--tag-purple-text);
+  }
+  .tag-status-active {
+    background: var(--tag-green);
+    color: var(--tag-green-text);
+  }
+  .tag-status-hold {
+    background: rgba(255,255,255,0.05);
     color: var(--text-dim);
   }
+
+  .work-body {
+    margin-left: 44px;
+    margin-top: 8px;
+  }
+
+  .work-synopsis {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.9;
+    font-style: italic;
+    min-height: 1.9em;
+  }
+
+  .work-synopsis.placeholder {
+    color: var(--text-dim);
+    opacity: 0.4;
+    font-style: normal;
+    font-size: 0.78rem;
+  }
+
+  .work-meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .work-meta-item {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .work-meta-item a {
+    color: var(--accent-gold);
+    text-decoration: none;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+
+  .work-meta-item a:hover {
+    opacity: 1;
+  }
+
+  /* ===== SUB WORKS LIST ===== */
+  .sub-works {
+    margin-top: 40px;
+  }
+
+  .sub-works-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .sub-works-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .sub-work {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    padding: 6px 0;
+    transition: color 0.3s;
+    white-space: nowrap;
+  }
+
+  .sub-work::after {
+    content: '　／　';
+    color: rgba(255,255,255,0.08);
+  }
+
+  .sub-work:last-child::after {
+    content: '';
+  }
+
+  .sub-work:hover {
+    color: var(--text-secondary);
+  }
+
+  /* ===== PROGRAM ===== */
+  .program-list { list-style: none; counter-reset: program; }
+  .program-list li {
+    counter-increment: program; padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; gap: 20px; align-items: baseline;
+  }
+  .program-list li::before {
+    content: counter(program, decimal-leading-zero);
+    font-size: 0.7rem; color: var(--accent-gold);
+    letter-spacing: 0.1em; flex-shrink: 0;
+  }
+  .program-content { flex: 1; }
+  .program-content strong {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 1rem; display: block; margin-bottom: 4px;
+  }
+  .program-content span { font-size: 0.8rem; color: var(--text-dim); }
 
   /* ===== PROFILE ===== */
   .profile-box {
-    background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 40px;
-    margin-top: 20px;
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+    padding: 40px; margin-top: 20px;
   }
-
-  .profile-name {
-    font-family: 'Shippori Mincho', serif;
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin-bottom: 4px;
-  }
-
-  .profile-name-en {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-    margin-bottom: 20px;
-  }
-
-  .profile-box p {
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    line-height: 1.9;
-  }
+  .profile-name { font-family: 'Shippori Mincho', serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+  .profile-name-en { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.2em; margin-bottom: 20px; }
+  .profile-box p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.9; }
 
   /* ===== CTA ===== */
-  .cta-section {
-    text-align: center;
-    padding: 100px 24px;
-    max-width: 680px;
-    margin: 0 auto;
-  }
-
-  .cta-section .section-title {
-    margin-bottom: 16px;
-  }
-
-  .cta-section p {
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    margin-bottom: 40px;
-  }
-
+  .cta-section { text-align: center; padding: 100px 24px; max-width: 680px; margin: 0 auto; }
+  .cta-section .section-title { margin-bottom: 16px; }
+  .cta-section p { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 40px; }
   .cta-btn {
-    display: inline-block;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.3em;
-    color: var(--bg-deep);
-    background: var(--accent-gold);
-    padding: 16px 48px;
-    text-decoration: none;
-    transition: all 0.4s ease;
-    border: 1px solid var(--accent-gold);
+    display: inline-block; font-size: 0.8rem; letter-spacing: 0.3em;
+    color: var(--bg-deep); background: var(--accent-gold);
+    padding: 16px 48px; text-decoration: none;
+    transition: all 0.4s ease; border: 1px solid var(--accent-gold);
   }
-
-  .cta-btn:hover {
-    background: transparent;
-    color: var(--accent-gold);
-  }
-
-  .cta-note {
-    margin-top: 16px;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-  }
+  .cta-btn:hover { background: transparent; color: var(--accent-gold); }
+  .cta-note { margin-top: 16px; font-size: 0.72rem; color: var(--text-dim); }
 
   /* ===== FOOTER ===== */
   footer {
-    text-align: center;
-    padding: 40px 24px 60px;
-    font-size: 0.6rem;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-    line-height: 2;
+    text-align: center; padding: 40px 24px 60px;
+    font-size: 0.6rem; color: var(--text-dim);
+    letter-spacing: 0.2em; line-height: 2;
   }
-
   footer .slogan {
-    font-family: 'Shippori Mincho', serif;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
+    font-family: 'Shippori Mincho', serif; font-size: 0.75rem;
+    color: var(--text-secondary); margin-bottom: 8px;
   }
 
   /* ===== ANIMATIONS ===== */
@@ -418,28 +369,15 @@
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes float {
     0%, 100% { transform: translateX(-50%) translateY(0); }
     50% { transform: translateX(-50%) translateY(6px); }
   }
-
-  @keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  /* ===== SCROLL REVEAL ===== */
   .reveal {
-    opacity: 0;
-    transform: translateY(20px);
+    opacity: 0; transform: translateY(20px);
     transition: opacity 0.8s ease, transform 0.8s ease;
   }
-
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 
   /* ===== RESPONSIVE ===== */
   @media (max-width: 600px) {
@@ -447,12 +385,14 @@
     .stat-number { font-size: 1.8rem; }
     .profile-box { padding: 28px 20px; }
     .cta-btn { padding: 14px 36px; }
+    .work-card { padding: 20px 16px; }
+    .work-body { margin-left: 0; }
+    .work-card-header { gap: 8px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Lemuria TV Color Bars -->
 <div class="color-bar"></div>
 <div class="color-bar-bottom"></div>
 
@@ -497,7 +437,7 @@
 
 <div class="divider"></div>
 
-<!-- ABOUT THE EVENT -->
+<!-- ABOUT -->
 <section class="section reveal">
   <p class="section-label">About</p>
   <h2 class="section-title">未完記念ってなに？<br>未完で何を記念するの！？</h2>
@@ -507,76 +447,260 @@
   <p>ロマンに満ちた未完の大作集について、大いに語るワンナイト。</p>
 </section>
 
-<div class="divider"></div>
+<div class="divider divider-wide"></div>
 
-<!-- WORKS TICKER -->
-<div class="ticker-section">
-  <div class="ticker-track">
-    <span class="ticker-item">ももじろう（ふたりのたろう）</span>
-    <span class="ticker-item">国家転覆人 河合紋次郎</span>
-    <span class="ticker-item">ゲニョンの襲来!!</span>
-    <span class="ticker-item">天女シスターズ</span>
-    <span class="ticker-item completed">織姫豪快伝説</span>
-    <span class="ticker-item">パラダイス蝉</span>
-    <span class="ticker-item">忍者エゾ丸</span>
-    <span class="ticker-item">OCCULT</span>
-    <span class="ticker-item">ドア、閉まってもいいですか？</span>
-    <span class="ticker-item">さくら組のソータくん</span>
-    <span class="ticker-item">GENYON THE WORLD</span>
-    <span class="ticker-item">ももじろう（ユスリカの仲人）</span>
-    <span class="ticker-item">アカサタナ兄弟</span>
-    <span class="ticker-item">ポーチドエッグ</span>
-    <span class="ticker-item">家、借りてまーす</span>
-    <span class="ticker-item">息をはいて、吸ってください</span>
-    <span class="ticker-item">3兆年後のメリクリ</span>
-    <span class="ticker-item">キンダーランド（仮）</span>
-    <span class="ticker-item">願わば、カナエちゃん</span>
-    <span class="ticker-item">幽霊のケンカ</span>
-    <span class="ticker-item">野球を知っているか</span>
-    <span class="ticker-item">ピカソ、賞をとる</span>
-    <span class="ticker-item completed">主人の思い出</span>
-    <span class="ticker-item completed">眠ったら教えてください</span>
-    <span class="ticker-item">播州サバイブ</span>
-    <span class="ticker-item">ランドリーウォーズ</span>
-    <span class="ticker-item">グッドミーニング</span>
-    <span class="ticker-item">運命の人</span>
-    <span class="ticker-item">ひと夏の取り調べ</span>
-    <span class="ticker-item">紙垂ふり少女</span>
-    <span class="ticker-item">こけら落ちた</span>
-    <!-- duplicate for seamless loop -->
-    <span class="ticker-item">ももじろう（ふたりのたろう）</span>
-    <span class="ticker-item">国家転覆人 河合紋次郎</span>
-    <span class="ticker-item">ゲニョンの襲来!!</span>
-    <span class="ticker-item">天女シスターズ</span>
-    <span class="ticker-item completed">織姫豪快伝説</span>
-    <span class="ticker-item">パラダイス蝉</span>
-    <span class="ticker-item">忍者エゾ丸</span>
-    <span class="ticker-item">OCCULT</span>
-    <span class="ticker-item">ドア、閉まってもいいですか？</span>
-    <span class="ticker-item">さくら組のソータくん</span>
-    <span class="ticker-item">GENYON THE WORLD</span>
-    <span class="ticker-item">ももじろう（ユスリカの仲人）</span>
-    <span class="ticker-item">アカサタナ兄弟</span>
-    <span class="ticker-item">ポーチドエッグ</span>
-    <span class="ticker-item">家、借りてまーす</span>
-    <span class="ticker-item">息をはいて、吸ってください</span>
-    <span class="ticker-item">3兆年後のメリクリ</span>
-    <span class="ticker-item">キンダーランド（仮）</span>
-    <span class="ticker-item">願わば、カナエちゃん</span>
-    <span class="ticker-item">幽霊のケンカ</span>
-    <span class="ticker-item">野球を知っているか</span>
-    <span class="ticker-item">ピカソ、賞をとる</span>
-    <span class="ticker-item completed">主人の思い出</span>
-    <span class="ticker-item completed">眠ったら教えてください</span>
-    <span class="ticker-item">播州サバイブ</span>
-    <span class="ticker-item">ランドリーウォーズ</span>
-    <span class="ticker-item">グッドミーニング</span>
-    <span class="ticker-item">運命の人</span>
-    <span class="ticker-item">ひと夏の取り調べ</span>
-    <span class="ticker-item">紙垂ふり少女</span>
-    <span class="ticker-item">こけら落ちた</span>
+<!-- WORKS CATALOG -->
+<section class="section-wide reveal">
+  <p class="section-label">Works</p>
+  <h2 class="section-title">主要作品</h2>
+
+  <div class="works-grid">
+
+    <!-- 01 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">01</span>
+        <h3 class="work-title">ももじろう（ふたりのたろう）</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">長編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2022/11</span>
+          <span class="work-meta-item">島根で着想</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">02</span>
+        <h3 class="work-title">ももじろう（ユスリカの仲人）</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">長編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/06</span>
+          <span class="work-meta-item">前日譚・治打撲一方編</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">03</span>
+        <h3 class="work-title">国家転覆人　河合紋次郎</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">長編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2022/12</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">04</span>
+        <h3 class="work-title">ゲニョンの襲来!!</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">長編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/04</span>
+          <span class="work-meta-item">島根で着想</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">05</span>
+        <h3 class="work-title">忍者エゾ丸</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">長編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-hold">保留</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/07</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">06</span>
+        <h3 class="work-title">パラダイス蝉</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">短編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/07</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">07</span>
+        <h3 class="work-title">ドア、閉まってもいいですか？</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">短編</span>
+          <span class="tag tag-seisaku">マンガ</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/12</span>
+          <span class="work-meta-item">完結させたい</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">08</span>
+        <h3 class="work-title">さくら組のソータくん</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">短編</span>
+          <span class="tag tag-seisaku">マンガ</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/12</span>
+          <span class="work-meta-item">完結させたい</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 09 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">09</span>
+        <h3 class="work-title">播州サバイブ</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">長編</span>
+          <span class="tag tag-seisaku">文章</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2025</span>
+          <span class="work-meta-item">姫路フィールドリサーチ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="work-card">
+      <div class="work-card-header">
+        <span class="work-number">10</span>
+        <h3 class="work-title">息をはいて、吸ってください（IKI-HIGH）</h3>
+        <div class="work-tags">
+          <span class="tag tag-kubun">コンセプト</span>
+          <span class="tag tag-seisaku">ライフスタイル</span>
+          <span class="tag tag-status-active">継続</span>
+        </div>
+      </div>
+      <div class="work-body">
+        <p class="work-synopsis placeholder">── あらすじは当日のお楽しみ</p>
+        <div class="work-meta">
+          <span class="work-meta-item">初出 2023/04</span>
+          <span class="work-meta-item">エアタバコ制作</span>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
+
+  <!-- SUB WORKS -->
+  <div class="sub-works">
+    <p class="sub-works-label">AND MORE ── ほかにも、こんなに。</p>
+    <div class="sub-works-grid">
+      <span class="sub-work">OCCULT</span>
+      <span class="sub-work">GENYON THE WORLD</span>
+      <span class="sub-work">アカサタナ兄弟</span>
+      <span class="sub-work">ポーチドエッグ</span>
+      <span class="sub-work">こけら落ちた</span>
+      <span class="sub-work">家、借りてまーす</span>
+      <span class="sub-work">天女シスターズ</span>
+      <span class="sub-work">織姫豪快伝説</span>
+      <span class="sub-work">3兆年後のメリクリ</span>
+      <span class="sub-work">キンダーランド（仮）</span>
+      <span class="sub-work">願わば、カナエちゃん</span>
+      <span class="sub-work">幽霊のケンカ</span>
+      <span class="sub-work">野球を知っているか</span>
+      <span class="sub-work">ピカソ、賞をとる</span>
+      <span class="sub-work">グッドミーニング</span>
+      <span class="sub-work">運命の人</span>
+      <span class="sub-work">ひと夏の取り調べ</span>
+      <span class="sub-work">眠ったら教えてください</span>
+      <span class="sub-work">紙垂ふり少女</span>
+      <span class="sub-work">主人の思い出</span>
+      <span class="sub-work">ただのキムタク</span>
+      <span class="sub-work">ランドリーウォーズ</span>
+      <span class="sub-work">眠れぬ夜に</span>
+      <span class="sub-work">雨</span>
+      <span class="sub-work">チャッター</span>
+      <span class="sub-work">ロジカルミーツガール</span>
+      <span class="sub-work">男といえば</span>
+      <span class="sub-work">モチベの総量</span>
+      <span class="sub-work">準備が９割</span>
+      <span class="sub-work">汚れたカップ</span>
+      <span class="sub-work">海のサファリーン</span>
+      <span class="sub-work">ゴースト</span>
+      <span class="sub-work">ホワイトバーガー</span>
+      <span class="sub-work">若き血</span>
+      <span class="sub-work">春の嵐</span>
+      <span class="sub-work">白い悪魔</span>
+    </div>
+  </div>
+
+</section>
+
+<div class="divider"></div>
 
 <!-- PROGRAM -->
 <section class="section reveal">
@@ -633,7 +757,7 @@
     2026年3月17日（月）/ オンライン / Zoom / 無料<br>
     プロデューサーの家に集まって、<br>酒を飲みながら面白い話を聞く夜。
   </p>
-  <a href="https://forms.gle/KgWSyXrooEdu38sq9" class="cta-btn" target="_blank" rel="noopener">参加を申し込む</a>
+  <a href="#" class="cta-btn" target="_blank" rel="noopener">参加を申し込む</a>
   <p class="cta-note">※ Googleフォームが開きます。Zoomリンクは申込後にお送りします。</p>
 </section>
 
@@ -643,14 +767,11 @@
   <p>REMURIA TELEPATHIC NETWORK CORPORATION<br>レムリアテレビ意識波息株式会社</p>
 </footer>
 
-<!-- SCROLL REVEAL SCRIPT -->
 <script>
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
+      if (entry.isIntersecting) entry.target.classList.add('visible');
     });
   }, { threshold: 0.15 });
   reveals.forEach(el => observer.observe(el));
