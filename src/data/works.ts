@@ -59,7 +59,7 @@ export const timeSlotInfo: Record<TimeSlot, {
     name: "LUCID",
     time: "30-32時",
     frequency: "β 13-30Hz",
-    color: "#243442", // 雲海の上の朝。深いブルーグレー/スレートブルー。山並みと雲海の色
+    color: "#4a2858", // 夜明け前。青紫からローズへの移行。朝陽が滲み始める
     description: "明晰夢。夢の中で「気づいている」状態",
   },
   TRANSIT: {
@@ -75,36 +75,43 @@ export const timeSlotInfo: Record<TimeSlot, {
 export const lunarPhaseInfo: Record<LunarPhase, {
   name: string;
   pinyin: string;
+  days: string;
   meaning: string;
 }> = {
   HUI: {
     name: "晦",
     pinyin: "huì",
+    days: "Day 22-28",
     meaning: "月の最終日。隠れる、暗い",
   },
   XIAXIAN: {
     name: "下弦",
     pinyin: "xià xián",
+    days: "Day 15-21",
     meaning: "弦が緩む。降りていく",
   },
   WANG: {
     name: "望",
     pinyin: "wàng",
+    days: "Day 14",
     meaning: "望む。満月を仰ぎ望む",
   },
   SHANGXIAN: {
     name: "上弦",
     pinyin: "shàng xián",
+    days: "Day 10-13",
     meaning: "弦が張る。エネルギーが満ちる",
   },
   MEIYUE: {
     name: "眉月",
     pinyin: "méi yuè",
+    days: "Day 6-9",
     meaning: "眉のような細い月。繊細",
   },
   SHUO: {
     name: "朔",
     pinyin: "shuò",
+    days: "Day 1-5",
     meaning: "月の第一日。原点に戻る",
   },
 };

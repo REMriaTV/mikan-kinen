@@ -97,7 +97,7 @@ export default function WorksPage() {
         <Link href="/" className="text-gold text-sm hover:underline mb-4 inline-block">
           ← トップに戻る
         </Link>
-        <h1 className="font-shippori text-2xl md:text-3xl font-bold mb-2">番組表</h1>
+        <h1 className="font-shippori text-2xl md:text-3xl font-bold mb-2">REM RHYTHM</h1>
         <p className="text-secondary text-sm mb-2">
           レムリアテレビ ── 百面惣の未完放送一覧
         </p>
@@ -138,6 +138,7 @@ export default function WorksPage() {
                     >
                       <div className="font-shippori text-base font-bold">{info.name}</div>
                       <div className="text-[0.55rem] text-dim italic">{info.pinyin}</div>
+                      <div className="text-[0.5rem] text-dim">{info.days}</div>
                     </th>
                   );
                 })}
