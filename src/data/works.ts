@@ -2,6 +2,7 @@ export type WorkTier = "main" | "sub" | "odai";
 export type WorkStatus = "継続" | "休止" | "保留" | "完成";
 export type WorkFormat = "文章" | "マンガ" | "イラスト" | "ライフスタイル";
 export type WorkScale = "長編" | "短編" | "SS" | "コンセプト" | "未定";
+export type TimeSlot = "BOTTOM" | "DRIFT" | "REM" | "LUCID" | "TRANSIT";
 
 export interface Work {
   id: number;
@@ -16,92 +17,74 @@ export interface Work {
   peekNote: string;
   driveLink: string;
   meta: string[];
+  timeSlot?: TimeSlot;
+  broadcastImage?: string;
 }
 
+// 時間帯の定義
+export const timeSlotInfo: Record<TimeSlot, {
+  name: string;
+  nameJa?: string;
+  time: string;
+  frequency: string;
+  color: string;
+  description: string;
+}> = {
+  BOTTOM: {
+    name: "BOTTOM",
+    time: "22-25時",
+    frequency: "δ 0.5-4Hz",
+    color: "#1a1a4e",
+    description: "底からはじまる。底だと思ったら、世界の入り口だった",
+  },
+  DRIFT: {
+    name: "DRIFT",
+    time: "25-27時",
+    frequency: "θ 4-8Hz",
+    color: "#2d1b69",
+    description: "さまよう。まどろみの中を漂流する",
+  },
+  REM: {
+    name: "R.E.M",
+    time: "27-30時",
+    frequency: "α 8-13Hz",
+    color: "#1b3a6b",
+    description: "Rapid Eye Movement。局名の由来そのもの。夢を見る時間。",
+  },
+  LUCID: {
+    name: "LUCID",
+    nameJa: "ルシッド",
+    time: "30-32時",
+    frequency: "β 13-30Hz",
+    color: "#c46a1e",
+    description: "明晰夢。夢の中で「気づいている」状態",
+  },
+  TRANSIT: {
+    name: "TRANSIT",
+    time: "32-33時",
+    frequency: "γ 30Hz〜",
+    color: "#c4a35a",
+    description: "「目覚め＝別の現実への乗り継ぎ地点」日常の繰り返しではない、全然違う次元の世界へ",
+  },
+};
+
 export const mainWorks: Work[] = [
+  // BOTTOM (22-25時)
   {
-    id: 3,
-    slug: "momojiro-futari",
-    title: "ももじろう（ふたりのたろう）",
+    id: 10,
+    slug: "iki-high",
+    title: "息をはいて、吸ってください（IKI-HIGH）",
     tier: "main",
-    scale: "長編",
-    format: "文章",
-    status: "継続",
-    debut: "2022/11",
-    synopsis: "",
-    peekNote: "",
-    driveLink: "",
-    meta: ["島根で着想"],
-  },
-  {
-    id: 16,
-    slug: "momojiro-yusurika",
-    title: "ももじろう（ユスリカの仲人）",
-    tier: "main",
-    scale: "長編",
-    format: "文章",
-    status: "継続",
-    debut: "2023/06",
-    synopsis: "",
-    peekNote: "",
-    driveLink: "",
-    meta: ["前日譚・治打撲一方編"],
-  },
-  {
-    id: 4,
-    slug: "kawai-monjiro",
-    title: "国家転覆人　河合紋次郎",
-    tier: "main",
-    scale: "長編",
-    format: "文章",
-    status: "継続",
-    debut: "2022/12",
-    synopsis: "",
-    peekNote: "",
-    driveLink: "",
-    meta: [],
-  },
-  {
-    id: 7,
-    slug: "genyon",
-    title: "ゲニョンの襲来!!",
-    tier: "main",
-    scale: "長編",
-    format: "文章",
+    scale: "コンセプト",
+    format: "ライフスタイル",
     status: "継続",
     debut: "2023/04",
     synopsis: "",
     peekNote: "",
     driveLink: "",
-    meta: ["島根で着想"],
-  },
-  {
-    id: 20,
-    slug: "ezo-maru",
-    title: "忍者エゾ丸",
-    tier: "main",
-    scale: "長編",
-    format: "文章",
-    status: "保留",
-    debut: "2023/07",
-    synopsis: "",
-    peekNote: "",
-    driveLink: "",
-    meta: [],
-  },
-  {
-    id: 18,
-    slug: "paradise-semi",
-    title: "パラダイス蝉",
-    tier: "main",
-    scale: "短編",
-    format: "文章",
-    status: "継続",
-    debut: "2023/07",
-    synopsis: "",
-    peekNote: "",
-    driveLink: "",
-    meta: [],
+    meta: ["エアタバコ制作"],
+    timeSlot: "BOTTOM",
+    broadcastImage: "教育テレビ",
   },
   {
     id: 26,
@@ -116,20 +99,94 @@ export const mainWorks: Work[] = [
     peekNote: "",
     driveLink: "",
     meta: ["完結させたい"],
+    timeSlot: "BOTTOM",
+    broadcastImage: "アニメ",
   },
+
+  // DRIFT (25-27時)
   {
-    id: 29,
-    slug: "sota-kun",
-    title: "さくら組のソータくん",
+    id: 20,
+    slug: "ezo-maru",
+    title: "忍者エゾ丸",
     tier: "main",
-    scale: "短編",
-    format: "マンガ",
-    status: "継続",
-    debut: "2023/12",
+    scale: "長編",
+    format: "文章",
+    status: "保留",
+    debut: "2023/07",
     synopsis: "",
     peekNote: "",
     driveLink: "",
-    meta: ["完結させたい"],
+    meta: [],
+    timeSlot: "DRIFT",
+    broadcastImage: "土曜ドラマ",
+  },
+  {
+    id: 18,
+    slug: "paradise-semi",
+    title: "パラダイス蝉",
+    tier: "main",
+    scale: "短編",
+    format: "文章",
+    status: "継続",
+    debut: "2023/07",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: [],
+    timeSlot: "DRIFT",
+    broadcastImage: "土曜ドラマ",
+  },
+
+  // R.E.M (27-30時)
+  {
+    id: 3,
+    slug: "twin-peach",
+    title: "ツインピーチ",
+    tier: "main",
+    scale: "長編",
+    format: "文章",
+    status: "継続",
+    debut: "2022/11",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: ["島根で着想"],
+    timeSlot: "REM",
+    broadcastImage: "日９",
+  },
+  {
+    id: 7,
+    slug: "genyon",
+    title: "ゲニョンの襲来!!",
+    tier: "main",
+    scale: "長編",
+    format: "文章",
+    status: "継続",
+    debut: "2023/04",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: ["島根で着想"],
+    timeSlot: "REM",
+    broadcastImage: "金曜ドラマ",
+  },
+
+  // LUCID (30-32時)
+  {
+    id: 4,
+    slug: "kawai-monjiro",
+    title: "国家転覆人 河合紋次郎",
+    tier: "main",
+    scale: "長編",
+    format: "文章",
+    status: "継続",
+    debut: "2022/12",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: [],
+    timeSlot: "LUCID",
+    broadcastImage: "金10",
   },
   {
     id: 100,
@@ -144,20 +201,74 @@ export const mainWorks: Work[] = [
     peekNote: "",
     driveLink: "",
     meta: ["姫路フィールドリサーチ"],
+    timeSlot: "LUCID",
+    broadcastImage: "ニュース、バラエティ",
   },
+
+  // TRANSIT (32-33時)
   {
-    id: 10,
-    slug: "iki-high",
-    title: "息をはいて、吸ってください（IKI-HIGH）",
+    id: 29,
+    slug: "sota-kun",
+    title: "さくら組のソータくん",
     tier: "main",
-    scale: "コンセプト",
-    format: "ライフスタイル",
+    scale: "短編",
+    format: "マンガ",
     status: "継続",
-    debut: "2023/04",
+    debut: "2023/12",
     synopsis: "",
     peekNote: "",
     driveLink: "",
-    meta: ["エアタバコ制作"],
+    meta: ["完結させたい"],
+    timeSlot: "TRANSIT",
+    broadcastImage: "深夜放送、実験枠",
+  },
+  {
+    id: 16,
+    slug: "yusurika",
+    title: "ユスリカの仲人",
+    tier: "main",
+    scale: "長編",
+    format: "文章",
+    status: "継続",
+    debut: "2023/06",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: ["前日譚・治打撲一方編"],
+    timeSlot: "TRANSIT",
+    broadcastImage: "深夜放送、実験枠",
+  },
+  {
+    id: 101,
+    slug: "hand-to-hand",
+    title: "HAND to HAND 〜 道程 〜",
+    tier: "main",
+    scale: "短編",
+    format: "文章",
+    status: "継続",
+    debut: "2025",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: [],
+    timeSlot: "TRANSIT",
+    broadcastImage: "深夜放送、実験枠",
+  },
+  {
+    id: 102,
+    slug: "kijimuna",
+    title: "木人",
+    tier: "main",
+    scale: "短編",
+    format: "文章",
+    status: "継続",
+    debut: "2025",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: [],
+    timeSlot: "TRANSIT",
+    broadcastImage: "深夜放送、実験枠",
   },
 ];
 
@@ -676,4 +787,8 @@ export function getWorkBySlug(slug: string): Work | undefined {
 
 export function getWorksByFormat(format: WorkFormat): Work[] {
   return allWorks.filter((work) => work.format === format);
+}
+
+export function getWorksByTimeSlot(timeSlot: TimeSlot): Work[] {
+  return mainWorks.filter((work) => work.timeSlot === timeSlot);
 }
