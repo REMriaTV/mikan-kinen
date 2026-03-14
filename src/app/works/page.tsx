@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import WorkModal from "@/components/WorkModal";
 import {
   subWorks,
   Work,
@@ -18,7 +19,15 @@ import {
   getWorksByHourCell,
 } from "@/data/works";
 
-function WorkCell({ work, bgColor }: { work: Work | null; bgColor: string }) {
+function WorkCell({
+  work,
+  bgColor,
+  onClick,
+}: {
+  work: Work | null;
+  bgColor: string;
+  onClick?: () => void;
+}) {
   if (!work) {
     return (
       <div
@@ -30,21 +39,21 @@ function WorkCell({ work, bgColor }: { work: Work | null; bgColor: string }) {
 
   return (
     <div
-      className="min-h-[60px] h-full p-1.5 flex flex-col justify-center"
+      className="min-h-[60px] h-full p-1.5 flex flex-col justify-center cursor-pointer"
       style={{ backgroundColor: `${bgColor}66` }}
+      onClick={onClick}
     >
-      <Link
-        href={`/works/${work.slug}`}
-        className="block px-1 py-0.5 rounded hover:bg-[rgba(255,255,255,0.1)] transition-colors"
-      >
+      <div className="block px-1 py-0.5 rounded hover:bg-[rgba(255,255,255,0.1)] transition-colors">
         <h4 className="font-shippori font-bold text-xs leading-snug break-words">
           {work.title}
         </h4>
         <div className="text-[0.55rem] text-[rgba(255,255,255,0.6)] leading-tight mt-0.5">
           <span>{work.debut}</span>
-          {work.broadcastImage && <span className="ml-1">/ {work.broadcastImage}</span>}
+          {work.broadcastImage && (
+            <span className="ml-1">/ {work.broadcastImage}</span>
+          )}
         </div>
-      </Link>
+      </div>
     </div>
   );
 }
@@ -67,6 +76,7 @@ function ScrollGuide({ onClose }: { onClose: () => void }) {
 
 export default function WorksPage() {
   const [showScrollGuide, setShowScrollGuide] = useState(false);
+  const [selectedWork, setSelectedWork] = useState<Work | null>(null);
 
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -190,7 +200,11 @@ export default function WorksPage() {
                           key={`${hour}-${phase}`}
                           className={`p-0 border-b border-[rgba(255,255,255,0.1)] ${!isLastColumn ? 'border-r border-r-[rgba(255,255,255,0.1)]' : ''}`}
                         >
-                          <WorkCell work={work} bgColor={slotInfo.color} />
+                          <WorkCell
+                            work={work}
+                            bgColor={slotInfo.color}
+                            onClick={work ? () => setSelectedWork(work) : undefined}
+                          />
                         </td>
                       );
                     })}
@@ -224,6 +238,11 @@ export default function WorksPage() {
           </div>
         </div>
       </div>
+
+      {/* Work Modal */}
+      {selectedWork && (
+        <WorkModal work={selectedWork} onClose={() => setSelectedWork(null)} />
+      )}
     </main>
   );
 }

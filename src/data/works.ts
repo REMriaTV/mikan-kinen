@@ -23,6 +23,9 @@ export interface Work {
   lunarPhase?: LunarPhase;
   hourSlot?: HourSlot;
   broadcastImage?: string;
+  comment?: string;        // 作品紹介コメント（Kaihei原文）
+  thumbnail?: string;      // サムネイル画像パス（将来用）
+  driveUrl?: string;       // Googleドライブ共有リンク
 }
 
 // 時間帯（縦軸）の定義
@@ -179,6 +182,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "HUI",
     hourSlot: 22,
     broadcastImage: "教育テレビ",
+    comment: "しんどい時こそ、呼吸に焦点をあて、生きていることや命の神秘性に想いを馳せる、しんどくないヨガ的な作品",
   },
   // 23時 × SHUO
   {
@@ -198,6 +202,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "SHUO",
     hourSlot: 23,
     broadcastImage: "アニメ",
+    comment: "何も考えたくないというときに、平和に尽きるエレベーターの日常を眺める休息的な作品",
   },
 
   // 26時 × WANG
@@ -218,6 +223,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "WANG",
     hourSlot: 26,
     broadcastImage: "土曜ドラマ",
+    comment: "暑苦しく想像しく鬱陶しいが7日間を死ぬ物狂いで生きる蝉の生き様に背中を押してもらう作品",
   },
   // 25時 × SHUO
   {
@@ -237,6 +243,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "SHUO",
     hourSlot: 25,
     broadcastImage: "土曜ドラマ",
+    comment: "エゾ丸とワニの珍道中のくだらなさをダラダラしながら味わう休息的な作品。",
   },
 
   // 28時 × HUI
@@ -257,6 +264,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "HUI",
     hourSlot: 28,
     broadcastImage: "金曜ドラマ",
+    comment: "目に見えない恐怖が支配するゾワゾワ感や、その中でもサバイブしていかないといけないときに勇気を与える作品",
   },
   // 27時 × MEIYUE
   {
@@ -276,6 +284,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "MEIYUE",
     hourSlot: 27,
     broadcastImage: "日9",
+    comment: "ヘタレの桃次郎が精神的な死を体験したあと再び立ち上がる様に自分を重ねる回復期の作品",
   },
 
   // 31時 × WANG
@@ -296,6 +305,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "WANG",
     hourSlot: 31,
     broadcastImage: "ニュース、バラエティ",
+    comment: "キャラの濃い曲者揃いの播州人たちのドラマと複雑な人間模様を一気に突っ走る現実エンタメ",
   },
   // 30時 × SHANGXIAN
   {
@@ -315,6 +325,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "SHANGXIAN",
     hourSlot: 30,
     broadcastImage: "金10",
+    comment: "歴史の捏造に勤しむ家紋デザイナーの紋次郎が解決するお家騒動の数々をスリリングに説いていくミステリー作品",
   },
 
   // 32時 × XIAXIAN
@@ -335,6 +346,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "XIAXIAN",
     hourSlot: 32,
     broadcastImage: "深夜放送、実験枠",
+    comment: "ノリノリだった自分と闇落ちしかける自分が両立する世界を桃太郎の老夫婦の関係で見てみるモニタリング的な作品",
   },
   // 33時 × XIAXIAN
   {
@@ -354,6 +366,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "XIAXIAN",
     hourSlot: 33,
     broadcastImage: "深夜放送、実験枠",
+    comment: "生理がしんどいとかも男子にはわからないだろうけど、それもこれも性教育の至らなさのせいだ、と教育を振り返る作品",
   },
   // 32時 × SHANGXIAN
   {
@@ -373,6 +386,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "SHANGXIAN",
     hourSlot: 32,
     broadcastImage: "深夜放送、実験枠",
+    comment: "壁は自分の中にある。勇気を出して踏み込んだ先に新しい世界が待っていると誘う作品",
   },
   // 32時 × MEIYUE
   {
@@ -392,6 +406,7 @@ export const mainWorks: Work[] = [
     lunarPhase: "MEIYUE",
     hourSlot: 32,
     broadcastImage: "深夜放送、実験枠",
+    comment: "自分を乗っ取ったガジュマルが案外いい感じで自分を操作してくれて、変容後の人生を楽しむ回復期の作品",
   },
 ];
 
