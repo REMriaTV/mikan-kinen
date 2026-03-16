@@ -37,7 +37,14 @@ export default function NemumiRoom() {
         接続状態：{started ? "受信中（ねむみルーム参加）" : "待機中"}
       </p>
 
-      <div className="mt-4">
+      <div
+        className="mt-4"
+        style={{
+          height: "60px",
+          overflow: "hidden",
+          borderRadius: "8px",
+        }}
+      >
         <iframe
           src={NEMUMI_ROOM_URL}
           allow="camera; microphone; autoplay; encrypted-media; fullscreen"
@@ -45,7 +52,8 @@ export default function NemumiRoom() {
           className="w-full"
           style={{
             border: "none",
-            height: "80px",
+            height: "260px",
+            transform: "translateY(-200px)",
             opacity: started ? 1 : 0.15,
             pointerEvents: started ? "auto" : "none",
           }}
