@@ -1,5 +1,6 @@
 import NemumiRoom from "@/components/NemumiRoom";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function NemumiPage() {
   return (
@@ -10,11 +11,14 @@ export default function NemumiPage() {
             Nemumi Channel
           </p>
           <div className="inline-flex items-center justify-center mb-6">
-            <div className="w-20 h-20 rounded-full border border-[rgba(255,255,255,0.3)] flex items-center justify-center relative overflow-hidden">
-              <div className="w-14 h-[2px] bg-[rgba(255,255,255,0.75)] rounded-full rotate-[-8deg]" />
-              <div className="absolute left-[22%] bottom-[32%] w-[6px] h-[6px] rounded-full bg-[rgba(255,255,255,0.75)]" />
-              <div className="absolute right-[22%] bottom-[32%] w-[6px] h-[6px] rounded-full bg-[rgba(255,255,255,0.75)]" />
-            </div>
+            <Image
+              src="/logo-nemumi.png"
+              alt="ねむみチャンネルのロゴ"
+              width={160}
+              height={160}
+              className="w-40 h-40 object-contain"
+              priority
+            />
           </div>
           <h1 className="font-shippori text-[clamp(1.5rem,3vw,2.1rem)] font-bold leading-snug mb-3">
             ねむみチャンネル
