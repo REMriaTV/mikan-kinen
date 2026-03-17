@@ -93,8 +93,8 @@ function GarageV2Inner() {
   const [joined, setJoined] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [resolvedName, setResolvedName] = useState<string | null>(null);
   const [isAudioOn, setIsAudioOn] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const { screens, isSharingScreen, startScreenShare, stopScreenShare } = useScreenShare();
@@ -108,7 +108,6 @@ function GarageV2Inner() {
       setJoined(true);
       if (daily) {
         setIsAudioOn(daily.localAudio());
-        setIsCameraOn(daily.localVideo());
       }
     }, [daily])
   );
@@ -117,10 +116,7 @@ function GarageV2Inner() {
     "left-meeting",
     useCallback(() => {
       setJoined(false);
-      setHasJoined(false);
       setIsAudioOn(false);
-      setIsCameraOn(false);
-      setChatMessages([]);
     }, [])
   );
 
@@ -153,8 +149,8 @@ function GarageV2Inner() {
         startVideoOff: true,
       });
       setHasJoined(true);
+      setResolvedName(name);
       setIsAudioOn(false);
-      setIsCameraOn(false);
     } catch {
       // join 失敗時は何もしない（メッセージも保持）
     }
@@ -200,13 +196,6 @@ function GarageV2Inner() {
     setIsAudioOn(next);
   };
 
-  const handleToggleCamera = () => {
-    if (!daily) return;
-    const next = !isCameraOn;
-    daily.setLocalVideo(next);
-    setIsCameraOn(next);
-  };
-
   const handleToggleShare = async () => {
     if (!daily) return;
     try {
@@ -225,7 +214,7 @@ function GarageV2Inner() {
       <div className="flex flex-col items-center justify-center h-[520px] md:h-[480px] bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6">
         <div className="max-w-md w-full space-y-4 text-center">
           <h2 className="text-[1rem] md:text-[1.1rem] text-secondary tracking-[0.18em]">
-            GARAGE HUNT v2
+            まどろみの窓
           </h2>
           <p className="text-[0.85rem] text-[rgba(255,255,255,0.7)]">
             夢の中での名前を入力してください。
@@ -259,38 +248,31 @@ function GarageV2Inner() {
         <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <div className="text-[0.8rem] text-dim">
-              {joined ? "接続中 - GARAGE HUNT v2" : "接続準備中"}
+              {joined
+                ? "チャネル中 - まどろみの窓"
+                : hasJoined
+                  ? "チャネルは終了しました"
+                  : "チャネル待機中 - まどろみの窓"}
             </div>
-            <div className="text-[0.7rem] text-[rgba(255,255,255,0.5)]">
+            {hasJoined && (
+              <div className="text-[0.7rem] text-[rgba(255,255,255,0.6)]">
+                このセッションでのあなたの夢氏名：
+                <span className="text-secondary">
+                  {resolvedName || displayName || "（未設定）"}
+                </span>
+              </div>
+            )}
+            <div className="text-[0.7rem] text-[rgba(255,255,255,0.5)] mt-0.5">
               参加者: {participantIds.length}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleToggleCamera}
-            className="flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
-          >
-            <span
-              className={
-                "relative inline-flex items-center justify-center w-6 h-6 rounded-full border " +
-                (isCameraOn
-                  ? "border-[rgba(255,80,80,0.9)] bg-[rgba(255,80,80,0.12)]"
-                  : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
-              }
-            >
-              {/* 瞳アイコン（シンプルな目の形） */}
-              <span className="absolute inset-[5px] rounded-full border border-[rgba(255,255,255,0.6)] opacity-80" />
-              {isCameraOn && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.95)]" />
-              )}
-              {!isCameraOn && (
-                <span className="w-4 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-12deg]" />
-              )}
-            </span>
-            <span className="text-[0.7rem] text-[rgba(255,255,255,0.7)]">
-              {isCameraOn ? "目を開いている" : "目を閉じている"}
-            </span>
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            {joined && (
+              <span className="px-3 py-1 rounded-full text-[0.7rem] bg-[rgba(224,90,51,0.18)] text-[rgba(255,230,210,0.95)] border border-[rgba(224,90,51,0.5)]">
+                レムリアテレビとチャネル中
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex-1 px-4 py-3 space-y-2 overflow-y-auto text-[0.85rem]">
           {chatMessages.length === 0 && (
