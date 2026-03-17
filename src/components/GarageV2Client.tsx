@@ -24,7 +24,8 @@ function GarageV2Inner() {
   const [joined, setJoined] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const { screens, screenShare } = useScreenShare();
+  const { screens } = useScreenShare();
+  const activeScreen = screens[0] ?? null;
   const [showShareOverlay, setShowShareOverlay] = useState(false);
 
   // 参加状態の監視
@@ -163,10 +164,10 @@ function GarageV2Inner() {
         <div
           className="flex-1 bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl flex items-center justify-center text-[0.8rem] text-[rgba(255,255,255,0.8)] cursor-pointer overflow-hidden"
           onClick={() => {
-            if (screenShare) setShowShareOverlay(true);
+            if (activeScreen) setShowShareOverlay(true);
           }}
         >
-          {!screenShare && (
+          {!activeScreen && (
             <div className="text-center px-4">
               <p className="mb-1">画面共有プレビュー</p>
               <p className="text-[0.7rem] text-[rgba(255,255,255,0.45)]">
@@ -174,13 +175,14 @@ function GarageV2Inner() {
               </p>
             </div>
           )}
-          {screenShare && (
+          {activeScreen && (
             <video
               ref={(el) => {
-                if (!el || !screenShare) return;
+                if (!el || !activeScreen) return;
                 // Dailyのトラックをプレビュー用videoにアタッチ
                 // @ts-ignore - daily-js型定義への依存を避ける
-                const mediaStream = screenShare?.tracks?.video?.persistentTrack?.mediaStream;
+                const videoState = activeScreen?.video as { persistentTrack?: { mediaStream?: MediaStream } } | undefined;
+                const mediaStream = videoState?.persistentTrack?.mediaStream;
                 if (mediaStream && el.srcObject !== mediaStream) {
                   el.srcObject = mediaStream;
                   el.play().catch(() => {});
@@ -216,14 +218,15 @@ function GarageV2Inner() {
       </div>
 
       {/* 画面共有全画面オーバーレイ */}
-      {showShareOverlay && screenShare && (
+      {showShareOverlay && activeScreen && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4">
           <div className="relative w-full max-w-4xl aspect-video bg-black border border-[rgba(255,255,255,0.3)] rounded-xl overflow-hidden">
             <video
               ref={(el) => {
-                if (!el || !screenShare) return;
+                if (!el || !activeScreen) return;
                 // @ts-ignore
-                const mediaStream = screenShare?.tracks?.video?.persistentTrack?.mediaStream;
+                const videoState = activeScreen?.video as { persistentTrack?: { mediaStream?: MediaStream } } | undefined;
+                const mediaStream = videoState?.persistentTrack?.mediaStream;
                 if (mediaStream && el.srcObject !== mediaStream) {
                   el.srcObject = mediaStream;
                   el.play().catch(() => {});
