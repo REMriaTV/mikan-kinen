@@ -109,10 +109,18 @@ function GarageV2Inner() {
     daily.setLocalAudio(!isMuted);
   };
 
+  // 画面共有の video トラックから MediaStream を取得（persistentTrack は MediaStreamTrack）
+  const getScreenShareStream = useCallback(() => {
+    const screen = activeScreen as { video?: { persistentTrack?: MediaStreamTrack } } | null;
+    if (!screen?.video) return null;
+    const track = screen.video.persistentTrack;
+    return track ? new MediaStream([track]) : null;
+  }, [activeScreen]);
+
   return (
     <div className="flex flex-col md:flex-row gap-4 h-[520px] md:h-[480px]">
       {/* チャットメインエリア */}
-      <div className="flex-1 flex flex-col bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between">
           <div className="text-[0.8rem] text-dim">
             {joined ? "接続中 - GARAGE HUNT v2" : "接続準備中"}
@@ -160,9 +168,9 @@ function GarageV2Inner() {
       </div>
 
       {/* 画面共有サムネイル＋コントロール */}
-      <div className="w-full md:w-64 flex flex-col gap-3">
+      <div className="w-full md:w-64 flex flex-col gap-3 min-h-0">
         <div
-          className="flex-1 bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl flex items-center justify-center text-[0.8rem] text-[rgba(255,255,255,0.8)] cursor-pointer overflow-hidden"
+          className="flex-1 min-h-[120px] max-h-[200px] md:max-h-none bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl flex items-center justify-center text-[0.8rem] text-[rgba(255,255,255,0.8)] cursor-pointer overflow-hidden"
           onClick={() => {
             if (activeScreen) setShowShareOverlay(true);
           }}
@@ -178,17 +186,15 @@ function GarageV2Inner() {
           {activeScreen && (
             <video
               ref={(el) => {
-                if (!el || !activeScreen) return;
-                // Dailyのトラックをプレビュー用videoにアタッチ
-                // @ts-ignore - daily-js型定義への依存を避ける
-                const videoState = activeScreen?.video as { persistentTrack?: { mediaStream?: MediaStream } } | undefined;
-                const mediaStream = videoState?.persistentTrack?.mediaStream;
-                if (mediaStream && el.srcObject !== mediaStream) {
-                  el.srcObject = mediaStream;
+                if (!el) return;
+                const stream = getScreenShareStream();
+                if (stream && el.srcObject !== stream) {
+                  el.srcObject = stream;
                   el.play().catch(() => {});
                 }
               }}
               muted
+              playsInline
               className="w-full h-full object-cover"
             />
           )}
@@ -223,16 +229,15 @@ function GarageV2Inner() {
           <div className="relative w-full max-w-4xl aspect-video bg-black border border-[rgba(255,255,255,0.3)] rounded-xl overflow-hidden">
             <video
               ref={(el) => {
-                if (!el || !activeScreen) return;
-                // @ts-ignore
-                const videoState = activeScreen?.video as { persistentTrack?: { mediaStream?: MediaStream } } | undefined;
-                const mediaStream = videoState?.persistentTrack?.mediaStream;
-                if (mediaStream && el.srcObject !== mediaStream) {
-                  el.srcObject = mediaStream;
+                if (!el) return;
+                const stream = getScreenShareStream();
+                if (stream && el.srcObject !== stream) {
+                  el.srcObject = stream;
                   el.play().catch(() => {});
                 }
               }}
               muted
+              playsInline
               className="w-full h-full object-contain bg-black"
             />
             <button
