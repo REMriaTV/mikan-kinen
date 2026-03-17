@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   DailyProvider,
   useDaily,
@@ -17,6 +17,47 @@ type ChatMessage = {
   text: string;
   timestamp: number;
 };
+
+/** 画面共有用 video 要素。autoPlay/playsInline/muted の3点セット＋readyState 対応 */
+function ScreenShareVideo({
+  activeScreen,
+  className,
+}: {
+  activeScreen: { video?: { persistentTrack?: MediaStreamTrack } } | null;
+  className?: string;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const track = (activeScreen as { video?: { persistentTrack?: MediaStreamTrack } } | null)?.video?.persistentTrack;
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !track) return;
+
+    const attachStream = () => {
+      const stream = new MediaStream([track]);
+      el.srcObject = stream;
+      el.play().catch((err) => console.error("[ScreenShareVideo] play failed:", err));
+    };
+
+    if (track.readyState === "live") {
+      attachStream();
+    } else {
+      const handler = () => attachStream();
+      track.addEventListener("unmute", handler, { once: true });
+      return () => track.removeEventListener("unmute", handler);
+    }
+  }, [track]);
+
+  return (
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      muted
+      className={className}
+    />
+  );
+}
 
 function GarageV2Inner() {
   const daily = useDaily();
@@ -109,14 +150,6 @@ function GarageV2Inner() {
     daily.setLocalAudio(!isMuted);
   };
 
-  // 画面共有の video トラックから MediaStream を取得（persistentTrack は MediaStreamTrack）
-  const getScreenShareStream = useCallback(() => {
-    const screen = activeScreen as { video?: { persistentTrack?: MediaStreamTrack } } | null;
-    if (!screen?.video) return null;
-    const track = screen.video.persistentTrack;
-    return track ? new MediaStream([track]) : null;
-  }, [activeScreen]);
-
   return (
     <div className="flex flex-col md:flex-row gap-4 h-[520px] md:h-[480px]">
       {/* チャットメインエリア */}
@@ -184,17 +217,8 @@ function GarageV2Inner() {
             </div>
           )}
           {activeScreen && (
-            <video
-              ref={(el) => {
-                if (!el) return;
-                const stream = getScreenShareStream();
-                if (stream && el.srcObject !== stream) {
-                  el.srcObject = stream;
-                  el.play().catch(() => {});
-                }
-              }}
-              muted
-              playsInline
+            <ScreenShareVideo
+              activeScreen={activeScreen as { video?: { persistentTrack?: MediaStreamTrack } }}
               className="w-full h-full object-cover"
             />
           )}
@@ -227,17 +251,8 @@ function GarageV2Inner() {
       {showShareOverlay && activeScreen && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4">
           <div className="relative w-full max-w-4xl aspect-video bg-black border border-[rgba(255,255,255,0.3)] rounded-xl overflow-hidden">
-            <video
-              ref={(el) => {
-                if (!el) return;
-                const stream = getScreenShareStream();
-                if (stream && el.srcObject !== stream) {
-                  el.srcObject = stream;
-                  el.play().catch(() => {});
-                }
-              }}
-              muted
-              playsInline
+            <ScreenShareVideo
+              activeScreen={activeScreen as { video?: { persistentTrack?: MediaStreamTrack } }}
               className="w-full h-full object-contain bg-black"
             />
             <button
