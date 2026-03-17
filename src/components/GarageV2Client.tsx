@@ -31,6 +31,18 @@ function ScreenShareVideo({
 
   useEffect(() => {
     console.log("[ScreenShareVideo] activeScreen:", activeScreen);
+    if (activeScreen) {
+      console.log(
+        "[ScreenShareVideo] activeScreen keys:",
+        Object.keys(activeScreen as Record<string, unknown>)
+      );
+      // Daily の screen オブジェクト構造を確認するため
+      // screenVideo/screenAudio の中身も一段掘ってログに出す
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyScreen = activeScreen as any;
+      console.log("[ScreenShareVideo] activeScreen.screenVideo:", anyScreen?.screenVideo);
+      console.log("[ScreenShareVideo] activeScreen.screenAudio:", anyScreen?.screenAudio);
+    }
     console.log("[ScreenShareVideo] track:", track);
 
     const el = videoRef.current;
