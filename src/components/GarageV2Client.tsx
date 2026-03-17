@@ -79,6 +79,9 @@ function GarageV2Inner() {
   const daily = useDaily();
   const participantIds = useParticipantIds();
   const [joined, setJoined] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [isCameraOn, setIsCameraOn] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const { screens } = useScreenShare();
@@ -90,6 +93,9 @@ function GarageV2Inner() {
     "joined-meeting",
     useCallback(() => {
       setJoined(true);
+      if (daily) {
+        setIsCameraOn(daily.localVideo());
+      }
     }, [])
   );
 
@@ -97,6 +103,8 @@ function GarageV2Inner() {
     "left-meeting",
     useCallback(() => {
       setJoined(false);
+      setHasJoined(false);
+      setIsCameraOn(false);
       setChatMessages([]);
     }, [])
   );
@@ -119,13 +127,21 @@ function GarageV2Inner() {
     }, [])
   );
 
-  // 最初の join
-  useEffect(() => {
-    if (!daily) return;
-    daily.join({ url: GARAGE_ROOM_URL }).catch(() => {
-      // エラー時はjoinedフラグを立てないだけにしておく
-    });
-  }, [daily]);
+  const handleJoin = async () => {
+    if (!daily || hasJoined) return;
+    const name = displayName.trim() || "名もなき夢人";
+    try {
+      await daily.join({
+        url: GARAGE_ROOM_URL,
+        userName: name,
+        startVideoOff: true,
+      });
+      setHasJoined(true);
+      setIsCameraOn(false);
+    } catch {
+      // join 失敗時は何もしない（メッセージも保持）
+    }
+  };
 
   const handleSend = async () => {
     if (!daily || !chatInput.trim()) return;
@@ -166,17 +182,84 @@ function GarageV2Inner() {
     daily.setLocalAudio(!isMuted);
   };
 
+  const handleToggleCamera = () => {
+    if (!daily) return;
+    const next = !isCameraOn;
+    daily.setLocalVideo(next);
+    setIsCameraOn(next);
+  };
+
+  if (!hasJoined) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[520px] md:h-[480px] bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6">
+        <div className="max-w-md w-full space-y-4 text-center">
+          <h2 className="text-[1rem] md:text-[1.1rem] text-secondary tracking-[0.18em]">
+            GARAGE HUNT v2
+          </h2>
+          <p className="text-[0.85rem] text-[rgba(255,255,255,0.7)]">
+            夢の中での名前を入力してください。
+          </p>
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="例）百面惣、名もなき夢人 など"
+            className="w-full bg-[rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.2)] rounded-md px-3 py-2 text-[0.9rem] text-secondary outline-none focus:border-gold"
+          />
+          <p className="text-[0.75rem] text-[rgba(255,255,255,0.55)]">
+            空欄のまま入室すると、「名もなき夢人」として参加します。
+          </p>
+          <button
+            type="button"
+            onClick={handleJoin}
+            className="w-full mt-2 px-4 py-2 text-[0.85rem] tracking-[0.18em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors"
+          >
+            入室する
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col md:flex-row gap-4 h-[520px] md:h-[480px]">
       {/* チャットメインエリア */}
       <div className="flex-1 flex flex-col min-h-0 bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between">
-          <div className="text-[0.8rem] text-dim">
-            {joined ? "接続中 - GARAGE HUNT v2" : "接続準備中"}
+        <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <div className="text-[0.8rem] text-dim">
+              {joined ? "接続中 - GARAGE HUNT v2" : "接続準備中"}
+            </div>
+            <div className="text-[0.7rem] text-[rgba(255,255,255,0.5)]">
+              参加者: {participantIds.length}
+            </div>
           </div>
-          <div className="text-[0.7rem] text-[rgba(255,255,255,0.5)]">
-            参加者: {participantIds.length}
-          </div>
+          <button
+            type="button"
+            onClick={handleToggleCamera}
+            className="flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
+          >
+            <span
+              className={
+                "relative inline-flex items-center justify-center w-6 h-6 rounded-full border " +
+                (isCameraOn
+                  ? "border-[rgba(255,80,80,0.9)] bg-[rgba(255,80,80,0.12)]"
+                  : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
+              }
+            >
+              {/* 瞳アイコン（シンプルな目の形） */}
+              <span className="absolute inset-[5px] rounded-full border border-[rgba(255,255,255,0.6)] opacity-80" />
+              {isCameraOn && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.95)]" />
+              )}
+              {!isCameraOn && (
+                <span className="w-4 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-12deg]" />
+              )}
+            </span>
+            <span className="text-[0.7rem] text-[rgba(255,255,255,0.7)]">
+              {isCameraOn ? "カメラON - 映っています" : "カメラOFF"}
+            </span>
+          </button>
         </div>
         <div className="flex-1 px-4 py-3 space-y-2 overflow-y-auto text-[0.85rem]">
           {chatMessages.length === 0 && (
