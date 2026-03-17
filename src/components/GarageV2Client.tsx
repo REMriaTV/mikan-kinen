@@ -11,6 +11,18 @@ import {
 
 const GARAGE_ROOM_URL = "https://remreal-tv.daily.co/garage-room";
 
+const DREAM_NAME_CANDIDATES = [
+  "夢の中の通りすがりA",
+  "あっちの世界の一般人",
+  "寝ても覚めても寝不足",
+];
+
+function getRandomDreamName() {
+  return DREAM_NAME_CANDIDATES[
+    Math.floor(Math.random() * DREAM_NAME_CANDIDATES.length)
+  ];
+}
+
 type ChatMessage = {
   id: string;
   from: string;
@@ -81,10 +93,11 @@ function GarageV2Inner() {
   const [joined, setJoined] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [isAudioOn, setIsAudioOn] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const { screens } = useScreenShare();
+  const { screens, isSharingScreen, startScreenShare, stopScreenShare } = useScreenShare();
   const activeScreen = screens[0] ?? null;
   const [showShareOverlay, setShowShareOverlay] = useState(false);
 
@@ -94,9 +107,10 @@ function GarageV2Inner() {
     useCallback(() => {
       setJoined(true);
       if (daily) {
+        setIsAudioOn(daily.localAudio());
         setIsCameraOn(daily.localVideo());
       }
-    }, [])
+    }, [daily])
   );
 
   useDailyEvent(
@@ -104,6 +118,7 @@ function GarageV2Inner() {
     useCallback(() => {
       setJoined(false);
       setHasJoined(false);
+      setIsAudioOn(false);
       setIsCameraOn(false);
       setChatMessages([]);
     }, [])
@@ -129,14 +144,16 @@ function GarageV2Inner() {
 
   const handleJoin = async () => {
     if (!daily || hasJoined) return;
-    const name = displayName.trim() || "名もなき夢人";
+    const name = displayName.trim() || getRandomDreamName();
     try {
       await daily.join({
         url: GARAGE_ROOM_URL,
         userName: name,
+        startAudioOff: true,
         startVideoOff: true,
       });
       setHasJoined(true);
+      setIsAudioOn(false);
       setIsCameraOn(false);
     } catch {
       // join 失敗時は何もしない（メッセージも保持）
@@ -178,8 +195,9 @@ function GarageV2Inner() {
 
   const handleToggleMute = () => {
     if (!daily) return;
-    const isMuted = daily.localAudio();
-    daily.setLocalAudio(!isMuted);
+    const next = !daily.localAudio();
+    daily.setLocalAudio(next);
+    setIsAudioOn(next);
   };
 
   const handleToggleCamera = () => {
@@ -187,6 +205,19 @@ function GarageV2Inner() {
     const next = !isCameraOn;
     daily.setLocalVideo(next);
     setIsCameraOn(next);
+  };
+
+  const handleToggleShare = async () => {
+    if (!daily) return;
+    try {
+      if (isSharingScreen) {
+        await stopScreenShare();
+      } else {
+        await startScreenShare();
+      }
+    } catch {
+      // 画面映写の開始/終了に失敗した場合はここでは握りつぶす
+    }
   };
 
   if (!hasJoined) {
@@ -207,7 +238,7 @@ function GarageV2Inner() {
             className="w-full bg-[rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.2)] rounded-md px-3 py-2 text-[0.9rem] text-secondary outline-none focus:border-gold"
           />
           <p className="text-[0.75rem] text-[rgba(255,255,255,0.55)]">
-            空欄のまま入室すると、「名もなき夢人」として参加します。
+            空欄のまま入室すると、「夢の中の通りすがりA」などの夢氏名がレムリア側でそっと選ばれます。
           </p>
           <button
             type="button"
@@ -257,7 +288,7 @@ function GarageV2Inner() {
               )}
             </span>
             <span className="text-[0.7rem] text-[rgba(255,255,255,0.7)]">
-              {isCameraOn ? "カメラON - 映っています" : "カメラOFF"}
+              {isCameraOn ? "目を開いている" : "目を閉じている"}
             </span>
           </button>
         </div>
@@ -309,9 +340,8 @@ function GarageV2Inner() {
         >
           {!activeScreen && (
             <div className="text-center px-4">
-              <p className="mb-1">画面共有プレビュー</p>
-              <p className="text-[0.7rem] text-[rgba(255,255,255,0.45)]">
-                いまは共有されていません。百面惣が画面共有を始めるとここに映像が出ます。
+              <p className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">
+                瞼の裏側 — まだ何も映されていません
               </p>
             </div>
           )}
@@ -328,13 +358,39 @@ function GarageV2Inner() {
         </div>
         <div className="bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 space-y-2 text-[0.8rem] text-dim">
           <div className="flex items-center justify-between">
-            <span>マイク</span>
+            <span>声のスイッチ</span>
             <button
               type="button"
               onClick={handleToggleMute}
+              className="flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
+            >
+              <span
+                className={
+                  "relative inline-flex items-center justify-center w-5 h-5 rounded-full border " +
+                  (isAudioOn
+                    ? "border-[rgba(224,90,51,0.9)] bg-[rgba(224,90,51,0.12)]"
+                    : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
+                }
+              >
+                {isAudioOn ? (
+                  <span className="w-3 h-3 rounded-full bg-[rgba(255,255,255,0.95)]" />
+                ) : (
+                  <span className="w-3 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-18deg]" />
+                )}
+              </span>
+              <span className="text-[0.7rem] text-[rgba(255,255,255,0.8)]">
+                {isAudioOn ? "声を届けている" : "沈黙中"}
+              </span>
+            </button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>映写</span>
+            <button
+              type="button"
+              onClick={handleToggleShare}
               className="px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
             >
-              切り替え
+              {isSharingScreen ? "映写を終える" : "映写する"}
             </button>
           </div>
           <div className="flex items-center justify-between">
