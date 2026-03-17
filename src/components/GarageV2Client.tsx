@@ -30,14 +30,26 @@ function ScreenShareVideo({
   const track = (activeScreen as { video?: { persistentTrack?: MediaStreamTrack } } | null)?.video?.persistentTrack;
 
   useEffect(() => {
+    console.log("[ScreenShareVideo] activeScreen:", activeScreen);
+    console.log("[ScreenShareVideo] track:", track);
+
     const el = videoRef.current;
-    if (!el || !track) return;
+    if (!el) {
+      console.warn("[ScreenShareVideo] video element not ready");
+      return;
+    }
+    if (!track) {
+      console.warn("[ScreenShareVideo] no track found on activeScreen");
+      return;
+    }
 
     const attachStream = () => {
       const stream = new MediaStream([track]);
       el.srcObject = stream;
       el.play().catch((err) => console.error("[ScreenShareVideo] play failed:", err));
     };
+
+    console.log("[ScreenShareVideo] track.readyState:", track.readyState);
 
     if (track.readyState === "live") {
       attachStream();
@@ -54,6 +66,9 @@ function ScreenShareVideo({
       autoPlay
       playsInline
       muted
+      onLoadedMetadata={() => console.log("[ScreenShareVideo] onLoadedMetadata")}
+      onCanPlay={() => console.log("[ScreenShareVideo] onCanPlay")}
+      onError={(e) => console.error("[ScreenShareVideo] onError", e)}
       className={className}
     />
   );
@@ -68,6 +83,12 @@ function GarageV2Inner() {
   const { screens } = useScreenShare();
   const activeScreen = screens[0] ?? null;
   const [showShareOverlay, setShowShareOverlay] = useState(false);
+
+  // 画面共有オブジェクトの構造を確認するためのログ
+  useEffect(() => {
+    console.log("[GarageV2Inner] screens from useScreenShare:", screens);
+    console.log("[GarageV2Inner] activeScreen:", activeScreen);
+  }, [screens, activeScreen]);
 
   // 参加状態の監視
   useDailyEvent(
