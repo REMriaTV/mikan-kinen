@@ -23,28 +23,22 @@ function ScreenShareVideo({
   activeScreen,
   className,
 }: {
-  activeScreen: { video?: { persistentTrack?: MediaStreamTrack } } | null;
+  activeScreen: {
+    screenVideo?: {
+      persistentTrack?: MediaStreamTrack;
+      track?: MediaStreamTrack;
+    };
+  } | null;
   className?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const track = (activeScreen as { video?: { persistentTrack?: MediaStreamTrack } } | null)?.video?.persistentTrack;
+  const sv =
+    (activeScreen as {
+      screenVideo?: { persistentTrack?: MediaStreamTrack; track?: MediaStreamTrack };
+    } | null)?.screenVideo;
+  const track: MediaStreamTrack | null = sv?.persistentTrack ?? sv?.track ?? null;
 
   useEffect(() => {
-    console.log("[ScreenShareVideo] activeScreen:", activeScreen);
-    if (activeScreen) {
-      console.log(
-        "[ScreenShareVideo] activeScreen keys:",
-        Object.keys(activeScreen as Record<string, unknown>)
-      );
-      // Daily の screen オブジェクト構造を確認するため
-      // screenVideo/screenAudio の中身も一段掘ってログに出す
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyScreen = activeScreen as any;
-      console.log("[ScreenShareVideo] activeScreen.screenVideo:", anyScreen?.screenVideo);
-      console.log("[ScreenShareVideo] activeScreen.screenAudio:", anyScreen?.screenAudio);
-    }
-    console.log("[ScreenShareVideo] track:", track);
-
     const el = videoRef.current;
     if (!el) {
       console.warn("[ScreenShareVideo] video element not ready");
@@ -61,8 +55,6 @@ function ScreenShareVideo({
       el.play().catch((err) => console.error("[ScreenShareVideo] play failed:", err));
     };
 
-    console.log("[ScreenShareVideo] track.readyState:", track.readyState);
-
     if (track.readyState === "live") {
       attachStream();
     } else {
@@ -78,9 +70,6 @@ function ScreenShareVideo({
       autoPlay
       playsInline
       muted
-      onLoadedMetadata={() => console.log("[ScreenShareVideo] onLoadedMetadata")}
-      onCanPlay={() => console.log("[ScreenShareVideo] onCanPlay")}
-      onError={(e) => console.error("[ScreenShareVideo] onError", e)}
       className={className}
     />
   );
@@ -95,12 +84,6 @@ function GarageV2Inner() {
   const { screens } = useScreenShare();
   const activeScreen = screens[0] ?? null;
   const [showShareOverlay, setShowShareOverlay] = useState(false);
-
-  // 画面共有オブジェクトの構造を確認するためのログ
-  useEffect(() => {
-    console.log("[GarageV2Inner] screens from useScreenShare:", screens);
-    console.log("[GarageV2Inner] activeScreen:", activeScreen);
-  }, [screens, activeScreen]);
 
   // 参加状態の監視
   useDailyEvent(
@@ -251,7 +234,11 @@ function GarageV2Inner() {
           )}
           {activeScreen && (
             <ScreenShareVideo
-              activeScreen={activeScreen as { video?: { persistentTrack?: MediaStreamTrack } }}
+              activeScreen={
+                activeScreen as {
+                  screenVideo?: { persistentTrack?: MediaStreamTrack; track?: MediaStreamTrack };
+                }
+              }
               className="w-full h-full object-cover"
             />
           )}
@@ -285,7 +272,11 @@ function GarageV2Inner() {
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4">
           <div className="relative w-full max-w-4xl aspect-video bg-black border border-[rgba(255,255,255,0.3)] rounded-xl overflow-hidden">
             <ScreenShareVideo
-              activeScreen={activeScreen as { video?: { persistentTrack?: MediaStreamTrack } }}
+              activeScreen={
+                activeScreen as {
+                  screenVideo?: { persistentTrack?: MediaStreamTrack; track?: MediaStreamTrack };
+                }
+              }
               className="w-full h-full object-contain bg-black"
             />
             <button
