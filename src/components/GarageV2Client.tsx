@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   DailyProvider,
   useDaily,
@@ -10,6 +11,22 @@ import {
 } from "@daily-co/daily-react";
 
 const GARAGE_ROOM_URL = "https://remreal-tv.daily.co/garage-room";
+
+// 文言（差し替え用に1箇所で管理）
+const COPY = {
+  PAGE_TITLE: "B.B.C",
+  PAGE_SUBTITLE: "BRAIN BACKYARD CHANNEL",
+  LABEL_DN: "D.N.:",
+  STATUS_SYNC: "REM Sync...",
+  STATUS_ASYNC: "REM Async",
+  PLACEHOLDER_CHAT: "寝言をつづる",
+  SEND_BUTTON: "zzZ",
+  BTN_MUTE_OFF: "沈黙中",
+  BTN_MUTE_ON: "寝言中",
+  BTN_SHARE: "映写する",
+  BTN_SHARE_STOP: "映写を終える",
+  BTN_LEAVE: "退出",
+} as const;
 
 const DREAM_NAME_CANDIDATES = [
   "夢の中の通りすがりA",
@@ -23,6 +40,26 @@ function getRandomDreamName() {
   ];
 }
 
+// ユーザー名から安定した色を割り当て（チャット色分け用）
+const USER_COLORS = [
+  "rgba(224,90,51,0.85)",
+  "rgba(100,180,200,0.9)",
+  "rgba(180,140,220,0.9)",
+  "rgba(220,180,80,0.9)",
+  "rgba(120,200,140,0.9)",
+  "rgba(220,120,150,0.9)",
+];
+
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+  return Math.abs(h);
+}
+
+function getUserColor(name: string): string {
+  return USER_COLORS[hashString(name) % USER_COLORS.length];
+}
+
 type ChatMessage = {
   id: string;
   from: string;
@@ -30,7 +67,7 @@ type ChatMessage = {
   timestamp: number;
 };
 
-/** 画面共有用 video 要素。autoPlay/playsInline/muted の3点セット＋readyState 対応 */
+/** 画面共有用 video 要素 */
 function ScreenShareVideo({
   activeScreen,
   className,
@@ -52,24 +89,14 @@ function ScreenShareVideo({
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el) {
-      console.warn("[ScreenShareVideo] video element not ready");
-      return;
-    }
-    if (!track) {
-      console.warn("[ScreenShareVideo] no track found on activeScreen");
-      return;
-    }
-
+    if (!el || !track) return;
     const attachStream = () => {
       const stream = new MediaStream([track]);
       el.srcObject = stream;
       el.play().catch((err) => console.error("[ScreenShareVideo] play failed:", err));
     };
-
-    if (track.readyState === "live") {
-      attachStream();
-    } else {
+    if (track.readyState === "live") attachStream();
+    else {
       const handler = () => attachStream();
       track.addEventListener("unmute", handler, { once: true });
       return () => track.removeEventListener("unmute", handler);
@@ -77,13 +104,7 @@ function ScreenShareVideo({
   }, [track]);
 
   return (
-    <video
-      ref={videoRef}
-      autoPlay
-      playsInline
-      muted
-      className={className}
-    />
+    <video ref={videoRef} autoPlay playsInline muted className={className} />
   );
 }
 
@@ -101,14 +122,11 @@ function GarageV2Inner() {
   const activeScreen = screens[0] ?? null;
   const [showShareOverlay, setShowShareOverlay] = useState(false);
 
-  // 参加状態の監視
   useDailyEvent(
     "joined-meeting",
     useCallback(() => {
       setJoined(true);
-      if (daily) {
-        setIsAudioOn(daily.localAudio());
-      }
+      if (daily) setIsAudioOn(daily.localAudio());
     }, [daily])
   );
 
@@ -120,7 +138,6 @@ function GarageV2Inner() {
     }, [])
   );
 
-  // app-message でチャット受信
   useDailyEvent(
     "app-message",
     useCallback((ev: any) => {
@@ -152,7 +169,7 @@ function GarageV2Inner() {
       setResolvedName(name);
       setIsAudioOn(false);
     } catch {
-      // join 失敗時は何もしない（メッセージも保持）
+      // join 失敗時は何もしない
     }
   };
 
@@ -160,7 +177,7 @@ function GarageV2Inner() {
     if (!daily || !chatInput.trim()) return;
     const text = chatInput.trim();
     setChatInput("");
-    // 自分側にも即時反映
+    const myName = resolvedName || displayName || "（未設定）";
     setChatMessages((prev) => [
       ...prev,
       {
@@ -173,7 +190,7 @@ function GarageV2Inner() {
     try {
       daily.sendAppMessage({ text }, "*");
     } catch {
-      // 送信失敗はここでは握りつぶす
+      // 送信失敗は握りつぶす
     }
   };
 
@@ -199,19 +216,19 @@ function GarageV2Inner() {
   const handleToggleShare = async () => {
     if (!daily) return;
     try {
-      if (isSharingScreen) {
-        await stopScreenShare();
-      } else {
-        await startScreenShare();
-      }
+      if (isSharingScreen) await stopScreenShare();
+      else await startScreenShare();
     } catch {
-      // 画面映写の開始/終了に失敗した場合はここでは握りつぶす
+      // 映写の開始/終了失敗時は握りつぶす
     }
   };
 
+  const displayNameFor = (from: string) =>
+    from === "you" ? (resolvedName || displayName || "（未設定）") : from;
+
   if (!hasJoined) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[520px] md:h-[480px] bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6">
+      <div className="flex flex-col items-center justify-center min-h-[520px] md:h-[480px] bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6 mx-4 mt-4">
         <div className="max-w-md w-full space-y-4 text-center">
           <h2 className="text-[1rem] md:text-[1.1rem] text-secondary tracking-[0.18em]">
             まどろみの窓
@@ -242,163 +259,185 @@ function GarageV2Inner() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 min-h-[520px] md:h-[480px]">
-      {/* チャットメインエリア */}
-      <div className="flex-1 flex flex-col min-h-0 bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between gap-3">
-          <div className="flex flex-col">
-            <div className="text-[0.8rem] text-dim">
-              {joined
-                ? "まどろみの窓 — Channeling"
-                : hasJoined
-                  ? "チャネルは終了しました"
-                  : "チャネル待機中 - まどろみの窓"}
-            </div>
-            {hasJoined && (
-              <div className="text-[0.7rem] text-[rgba(255,255,255,0.6)]">
-                夢氏名:
-                <span className="text-secondary">
-                  {resolvedName || displayName || "（未設定）"}
+    <div className="flex flex-col flex-1 min-h-0">
+      {/* 固定ヘッダー：ロゴ（瞼の裏側ボタン）＋タイトル＋右上3ボタン */}
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-3 px-4 py-2 md:px-6 md:py-3 bg-[rgba(13,15,18,0.98)] border-b border-[rgba(255,255,255,0.08)]">
+        <button
+          type="button"
+          onClick={() => setShowShareOverlay(true)}
+          className="flex items-center gap-2 md:gap-3 shrink-0 focus:outline-none"
+          aria-label="瞼の裏側（画面共有）を開く"
+        >
+          <span
+            className={
+              "relative flex rounded-full border-2 transition-all " +
+              (activeScreen
+                ? "border-amber-400/90 bg-amber-500/20 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
+                : "border-[rgba(255,255,255,0.3)] bg-[rgba(0,0,0,0.4)]")
+            }
+          >
+            <Image
+              src="/logo-nemumi.png"
+              alt=""
+              width={40}
+              height={40}
+              className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full"
+            />
+          </span>
+          <div className="hidden sm:block text-left">
+            <p className="text-[0.55rem] md:text-[0.6rem] tracking-[0.35em] text-dim uppercase">
+              {COPY.PAGE_SUBTITLE}
+            </p>
+            <h1 className="font-shippori text-[1rem] md:text-[1.25rem] font-bold text-secondary leading-tight">
+              {COPY.PAGE_TITLE}
+            </h1>
+          </div>
+        </button>
+        <div className="sm:min-w-[140px] flex items-center gap-1.5 md:gap-2 justify-end">
+          <button
+            type="button"
+            onClick={handleToggleMute}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem]"
+          >
+            <span
+              className={
+                "relative inline-flex items-center justify-center w-4 h-4 rounded-full border " +
+                (isAudioOn
+                  ? "border-[rgba(224,90,51,0.9)] bg-[rgba(224,90,51,0.12)]"
+                  : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
+              }
+            >
+              {isAudioOn ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.95)]" />
+              ) : (
+                <span className="w-2.5 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-18deg]" />
+              )}
+            </span>
+            <span className="text-[rgba(255,255,255,0.85)]">
+              {isAudioOn ? COPY.BTN_MUTE_ON : COPY.BTN_MUTE_OFF}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleShare}
+            className="px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)]"
+          >
+            {isSharingScreen ? COPY.BTN_SHARE_STOP : COPY.BTN_SHARE}
+          </button>
+          <button
+            type="button"
+            onClick={handleLeave}
+            className="px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)]"
+          >
+            {COPY.BTN_LEAVE}
+          </button>
+        </div>
+      </header>
+
+      {/* モバイル用：サブタイトル＋B.B.C をヘッダー下の1行に表示 */}
+      <div className="sm:hidden px-4 py-1 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(13,15,18,0.95)]">
+        <p className="text-[0.55rem] tracking-[0.3em] text-dim uppercase">
+          {COPY.PAGE_SUBTITLE}
+        </p>
+        <h1 className="font-shippori text-[1rem] font-bold text-secondary">
+          {COPY.PAGE_TITLE}
+        </h1>
+      </div>
+
+      {/* 情報バー：D.N. と参加者・ステータス（邪魔にならない位置） */}
+      <div className="flex items-center justify-between gap-3 px-4 py-2 text-[0.7rem] text-[rgba(255,255,255,0.6)] bg-[rgba(13,15,18,0.5)] border-b border-[rgba(255,255,255,0.06)]">
+        <span>
+          {COPY.LABEL_DN}
+          <span className="text-secondary ml-1">{resolvedName || displayName || "（未設定）"}</span>
+        </span>
+        <span>参加者: {participantIds.length}</span>
+        <span
+          className={
+            joined
+              ? "text-amber-400/90 font-medium"
+              : "text-[rgba(255,255,255,0.45)]"
+          }
+        >
+          {joined ? COPY.STATUS_SYNC : COPY.STATUS_ASYNC}
+        </span>
+      </div>
+
+      {/* チャット本文（スクロール） */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
+        {chatMessages.length === 0 && (
+          <p className="text-[0.8rem] text-[rgba(255,255,255,0.4)]">
+            ここにチャットが流れます。まだ何も話されていません。
+          </p>
+        )}
+        <div className="space-y-2 text-[0.85rem]">
+          {chatMessages.map((msg) => {
+            const name = displayNameFor(msg.from);
+            const color = getUserColor(name);
+            return (
+              <div key={msg.id} className="flex gap-2 items-baseline">
+                <span
+                  className="shrink-0 text-[0.7rem] font-medium min-w-[4.5rem]"
+                  style={{ color }}
+                >
+                  {name}:
+                </span>
+                <span className="px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.04)] text-secondary break-words">
+                  {msg.text}
                 </span>
               </div>
-            )}
-            <div className="text-[0.7rem] text-[rgba(255,255,255,0.5)] mt-0.5">
-              参加者: {participantIds.length}
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            {joined && (
-              <span className="px-3 py-1 rounded-full text-[0.7rem] bg-[rgba(224,90,51,0.18)] text-[rgba(255,230,210,0.95)] border border-[rgba(224,90,51,0.5)]">
-                Channeling — REMURIA TELEPATHIC NETWORK
-              </span>
-            )}
-          </div>
+            );
+          })}
         </div>
-        <div className="flex-1 px-4 py-3 space-y-2 overflow-y-auto text-[0.85rem]">
-          {chatMessages.length === 0 && (
-            <p className="text-[0.8rem] text-[rgba(255,255,255,0.4)]">
-              ここにチャットが流れます。まだ何も話されていません。
-            </p>
-          )}
-          {chatMessages.map((msg) => (
-            <div key={msg.id} className="flex flex-col">
-              <span className="text-[0.7rem] text-[rgba(255,255,255,0.5)] mb-0.5">
-                {msg.from}
-              </span>
-              <span className="px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.04)] text-secondary">
-                {msg.text}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-[rgba(255,255,255,0.1)] px-4 py-3 space-y-2">
+      </div>
+
+      {/* 入力エリア（固定） */}
+      <div className="border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.95)]">
+        <div className="flex gap-2 items-end">
           <textarea
             rows={2}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="寝言を綴る"
-            className="w-full bg-[rgba(0,0,0,0.4)] border border-[rgba(255,255,255,0.16)] rounded-md text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
+            placeholder={COPY.PLACEHOLDER_CHAT}
+            className="flex-1 min-w-0 bg-[rgba(0,0,0,0.4)] border border-[rgba(255,255,255,0.16)] rounded-md text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
           />
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSend}
-              className="px-4 py-1.5 text-[0.8rem] tracking-[0.15em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors"
-            >
-              送信
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleSend}
+            className="shrink-0 px-4 py-2 text-[0.8rem] tracking-[0.15em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors rounded-md"
+          >
+            {COPY.SEND_BUTTON}
+          </button>
         </div>
       </div>
 
-      {/* 画面共有サムネイル＋コントロール */}
-      <div className="w-full md:w-64 flex flex-col gap-3 min-h-0">
+      {/* 瞼の裏側ポップアップ（ロゴクリックで表示） */}
+      {showShareOverlay && (
         <div
-          className="flex-1 min-h-[120px] max-h-[200px] md:max-h-none bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl flex items-center justify-center text-[0.8rem] text-[rgba(255,255,255,0.8)] cursor-pointer overflow-hidden"
-          onClick={() => {
-            if (activeScreen) setShowShareOverlay(true);
-          }}
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center px-4"
+          onClick={() => setShowShareOverlay(false)}
         >
-          {!activeScreen && (
-            <div className="text-center px-4">
-              <p className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">
+          <div
+            className="relative w-full max-w-4xl aspect-video bg-black border border-[rgba(255,255,255,0.3)] rounded-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {activeScreen ? (
+              <ScreenShareVideo
+                activeScreen={
+                  activeScreen as {
+                    screenVideo?: {
+                      persistentTrack?: MediaStreamTrack;
+                      track?: MediaStreamTrack;
+                    };
+                  }
+                }
+                className="w-full h-full object-contain bg-black"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-[rgba(255,255,255,0.5)] text-sm">
                 瞼の裏側 — まだ何も映されていません
-              </p>
-            </div>
-          )}
-          {activeScreen && (
-            <ScreenShareVideo
-              activeScreen={
-                activeScreen as {
-                  screenVideo?: { persistentTrack?: MediaStreamTrack; track?: MediaStreamTrack };
-                }
-              }
-              className="w-full h-full object-cover"
-            />
-          )}
-        </div>
-        <div className="bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 space-y-2 text-[0.8rem] text-dim">
-          <div className="flex items-center justify-end">
-            <button
-              type="button"
-              onClick={handleToggleMute}
-              className="flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
-            >
-              <span
-                className={
-                  "relative inline-flex items-center justify-center w-5 h-5 rounded-full border " +
-                  (isAudioOn
-                    ? "border-[rgba(224,90,51,0.9)] bg-[rgba(224,90,51,0.12)]"
-                    : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
-                }
-              >
-                {isAudioOn ? (
-                  <span className="w-3 h-3 rounded-full bg-[rgba(255,255,255,0.95)]" />
-                ) : (
-                  <span className="w-3 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-18deg]" />
-                )}
-              </span>
-              <span className="text-[0.7rem] text-[rgba(255,255,255,0.8)]">
-                {isAudioOn ? "寝言中" : "沈黙中"}
-              </span>
-            </button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>映写</span>
-            <button
-              type="button"
-              onClick={handleToggleShare}
-              className="px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
-            >
-              {isSharingScreen ? "映写を終える" : "映写する"}
-            </button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>セッション</span>
-            <button
-              type="button"
-              onClick={handleLeave}
-              className="px-3 py-1 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
-            >
-              退出
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 画面共有全画面オーバーレイ */}
-      {showShareOverlay && activeScreen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4">
-          <div className="relative w-full max-w-4xl aspect-video bg-black border border-[rgba(255,255,255,0.3)] rounded-xl overflow-hidden">
-            <ScreenShareVideo
-              activeScreen={
-                activeScreen as {
-                  screenVideo?: { persistentTrack?: MediaStreamTrack; track?: MediaStreamTrack };
-                }
-              }
-              className="w-full h-full object-contain bg-black"
-            />
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setShowShareOverlay(false)}
@@ -416,8 +455,9 @@ function GarageV2Inner() {
 export default function GarageV2Client() {
   return (
     <DailyProvider url={GARAGE_ROOM_URL}>
-      <GarageV2Inner />
+      <div className="min-h-screen flex flex-col max-w-[960px] mx-auto">
+        <GarageV2Inner />
+      </div>
     </DailyProvider>
   );
 }
-
