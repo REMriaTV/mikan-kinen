@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   DailyProvider,
   useDaily,
@@ -321,8 +322,16 @@ function GarageV2Inner() {
             onClick={handleJoin}
             className="w-full mt-2 px-4 py-2 text-[0.85rem] tracking-[0.18em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors"
           >
-            入室する
+            瞳を閉じる
           </button>
+          <div className="pt-1">
+            <Link
+              href="/"
+              className="text-[0.78rem] text-[rgba(232,228,223,0.65)] hover:text-gold transition-colors"
+            >
+              ← 現実へ戻る
+            </Link>
+          </div>
         </div>
       </div>
     );
