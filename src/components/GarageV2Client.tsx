@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   DailyProvider,
+  DailyAudio,
   useDaily,
   useDailyEvent,
   useParticipantIds,
@@ -547,6 +548,8 @@ export default function GarageV2Client() {
   return (
     <DailyProvider url={GARAGE_ROOM_URL}>
       <div className="min-h-[100dvh] flex flex-col max-w-[960px] mx-auto">
+        {/* リモート音声再生（これがないと相手の声が聞こえない） */}
+        <DailyAudio />
         <GarageV2Inner />
       </div>
     </DailyProvider>
