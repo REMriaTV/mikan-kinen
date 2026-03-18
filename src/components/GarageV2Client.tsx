@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   DailyProvider,
@@ -14,8 +14,7 @@ const GARAGE_ROOM_URL = "https://remreal-tv.daily.co/garage-room";
 
 // 文言（差し替え用に1箇所で管理）
 const COPY = {
-  PAGE_TITLE: "B.B.C",
-  PAGE_SUBTITLE: "BRAIN BACKYARD CHANNEL",
+  PAGE_TITLE: "REM Chat",
   LABEL_DN: "D.N.:",
   STATUS_SYNC: "REM Sync...",
   STATUS_ASYNC: "REM Async",
@@ -26,6 +25,9 @@ const COPY = {
   BTN_SHARE: "映写する",
   BTN_SHARE_STOP: "映写を終える",
   BTN_LEAVE: "退出",
+  SHARE_HINT_BEFORE: "映写する内容（画面/ウィンドウ/タブ）を選びます。",
+  SHARE_HINT_ACTIVE: "映写中です。ロゴを押すと瞼の裏側が開きます。",
+  SHARE_HINT_CANCELED: "映写は開始されませんでした（キャンセル）。",
 } as const;
 
 const DREAM_NAME_CANDIDATES = [
@@ -121,6 +123,13 @@ function GarageV2Inner() {
   const { screens, isSharingScreen, startScreenShare, stopScreenShare } = useScreenShare();
   const activeScreen = screens[0] ?? null;
   const [showShareOverlay, setShowShareOverlay] = useState(false);
+  const [shareHint, setShareHint] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const myDreamName = useMemo(
+    () => resolvedName || displayName || "（未設定）",
+    [resolvedName, displayName]
+  );
 
   useDailyEvent(
     "joined-meeting",
@@ -177,7 +186,6 @@ function GarageV2Inner() {
     if (!daily || !chatInput.trim()) return;
     const text = chatInput.trim();
     setChatInput("");
-    const myName = resolvedName || displayName || "（未設定）";
     setChatMessages((prev) => [
       ...prev,
       {
@@ -192,6 +200,7 @@ function GarageV2Inner() {
     } catch {
       // 送信失敗は握りつぶす
     }
+    textareaRef.current?.blur();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -216,15 +225,42 @@ function GarageV2Inner() {
   const handleToggleShare = async () => {
     if (!daily) return;
     try {
-      if (isSharingScreen) await stopScreenShare();
-      else await startScreenShare();
+      if (isSharingScreen) {
+        await stopScreenShare();
+      } else {
+        setShareHint(COPY.SHARE_HINT_BEFORE);
+        await startScreenShare();
+      }
     } catch {
       // 映写の開始/終了失敗時は握りつぶす
+      setShareHint(COPY.SHARE_HINT_CANCELED);
     }
   };
 
   const displayNameFor = (from: string) =>
     from === "you" ? (resolvedName || displayName || "（未設定）") : from;
+
+  // 映写状態の変化に合わせて短いヒントを出す
+  useEffect(() => {
+    if (isSharingScreen) setShareHint(COPY.SHARE_HINT_ACTIVE);
+    else if (shareHint === COPY.SHARE_HINT_ACTIVE) setShareHint(null);
+  }, [isSharingScreen, shareHint]);
+
+  // ヒントは短時間で消える（常時表示はしない）
+  useEffect(() => {
+    if (!shareHint) return;
+    const t = window.setTimeout(() => setShareHint(null), 2800);
+    return () => window.clearTimeout(t);
+  }, [shareHint]);
+
+  // textarea の自動伸長（最大4行程度）
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const maxPx = 22 * 4 + 16; // おおよそ 4行 + padding
+    el.style.height = `${Math.min(el.scrollHeight, maxPx)}px`;
+  }, [chatInput]);
 
   if (!hasJoined) {
     return (
@@ -284,14 +320,9 @@ function GarageV2Inner() {
               className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full"
             />
           </span>
-          <div className="hidden sm:block text-left">
-            <p className="text-[0.55rem] md:text-[0.6rem] tracking-[0.35em] text-dim uppercase">
-              {COPY.PAGE_SUBTITLE}
-            </p>
-            <h1 className="font-shippori text-[1rem] md:text-[1.25rem] font-bold text-secondary leading-tight">
-              {COPY.PAGE_TITLE}
-            </h1>
-          </div>
+          <h1 className="font-shippori text-[0.95rem] md:text-[1.1rem] font-bold text-secondary leading-tight">
+            {COPY.PAGE_TITLE}
+          </h1>
         </button>
         <div className="sm:min-w-[140px] flex items-center gap-1.5 md:gap-2 justify-end">
           <button
@@ -320,7 +351,12 @@ function GarageV2Inner() {
           <button
             type="button"
             onClick={handleToggleShare}
-            className="px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)]"
+            className={
+              "px-2.5 py-1.5 rounded-full border hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)] " +
+              (isSharingScreen
+                ? "border-amber-400/50 bg-amber-500/10"
+                : "border-[rgba(255,255,255,0.25)]")
+            }
           >
             {isSharingScreen ? COPY.BTN_SHARE_STOP : COPY.BTN_SHARE}
           </button>
@@ -334,21 +370,11 @@ function GarageV2Inner() {
         </div>
       </header>
 
-      {/* モバイル用：サブタイトル＋B.B.C をヘッダー下の1行に表示 */}
-      <div className="sm:hidden px-4 py-1 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(13,15,18,0.95)]">
-        <p className="text-[0.55rem] tracking-[0.3em] text-dim uppercase">
-          {COPY.PAGE_SUBTITLE}
-        </p>
-        <h1 className="font-shippori text-[1rem] font-bold text-secondary">
-          {COPY.PAGE_TITLE}
-        </h1>
-      </div>
-
       {/* 情報バー：D.N. と参加者・ステータス（邪魔にならない位置） */}
-      <div className="flex items-center justify-between gap-3 px-4 py-2 text-[0.7rem] text-[rgba(255,255,255,0.6)] bg-[rgba(13,15,18,0.5)] border-b border-[rgba(255,255,255,0.06)]">
+      <div className="flex items-center justify-between gap-3 px-4 py-1.5 text-[0.68rem] text-[rgba(255,255,255,0.6)] bg-[rgba(13,15,18,0.55)] border-b border-[rgba(255,255,255,0.06)]">
         <span>
           {COPY.LABEL_DN}
-          <span className="text-secondary ml-1">{resolvedName || displayName || "（未設定）"}</span>
+          <span className="text-secondary ml-1">{myDreamName}</span>
         </span>
         <span>参加者: {participantIds.length}</span>
         <span
@@ -363,14 +389,14 @@ function GarageV2Inner() {
       </div>
 
       {/* チャット本文（スクロール） */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 pb-28">
         {chatMessages.length === 0 && (
           <p className="text-[0.8rem] text-[rgba(255,255,255,0.4)]">
             ここにチャットが流れます。まだ何も話されていません。
           </p>
         )}
         <div className="space-y-2 text-[0.85rem]">
-          {chatMessages.map((msg) => {
+          {[...chatMessages].reverse().map((msg) => {
             const name = displayNameFor(msg.from);
             const color = getUserColor(name);
             return (
@@ -390,27 +416,35 @@ function GarageV2Inner() {
         </div>
       </div>
 
-      {/* 入力エリア（固定） */}
-      <div
-        className="border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.95)]"
-        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-      >
-        <div className="flex gap-2 items-end">
-          <textarea
-            rows={2}
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={COPY.PLACEHOLDER_CHAT}
-            className="flex-1 min-w-0 bg-[rgba(0,0,0,0.4)] border border-[rgba(255,255,255,0.16)] rounded-md text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
-          />
-          <button
-            type="button"
-            onClick={handleSend}
-            className="shrink-0 px-4 py-2 text-[0.8rem] tracking-[0.15em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors rounded-md"
+      {/* 入力エリア（フッター固定） */}
+      <div className="fixed left-0 right-0 bottom-0 z-40">
+        <div className="max-w-[960px] mx-auto border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.55)] backdrop-blur-md">
+          {shareHint && (
+            <div className="mb-2 text-[0.72rem] text-[rgba(255,255,255,0.65)]">
+              {shareHint}
+            </div>
+          )}
+          <div
+            className="flex gap-2 items-end"
+            style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
           >
-            {COPY.SEND_BUTTON}
-          </button>
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={COPY.PLACEHOLDER_CHAT}
+              className="flex-1 min-w-0 bg-[rgba(0,0,0,0.35)] border border-[rgba(255,255,255,0.16)] rounded-md text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              className="shrink-0 px-4 py-2 text-[0.8rem] tracking-[0.15em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors rounded-md whitespace-nowrap"
+            >
+              {COPY.SEND_BUTTON}
+            </button>
+          </div>
         </div>
       </div>
 
