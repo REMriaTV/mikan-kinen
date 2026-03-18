@@ -1,8 +1,10 @@
 import Link from "next/link";
+import BroadcastCountdownBanner from "@/components/BroadcastCountdownBanner";
 
 export default function Home() {
   return (
     <main>
+      <BroadcastCountdownBanner />
       {/* HERO */}
       <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 py-20 relative">
         <p className="text-[0.7rem] tracking-[0.4em] uppercase text-dim mb-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>
