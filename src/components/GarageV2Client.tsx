@@ -126,6 +126,10 @@ function GarageV2Inner() {
   const [shareHint, setShareHint] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const canLocalScreenShare =
+    typeof window !== "undefined" &&
+    !!(navigator.mediaDevices && (navigator.mediaDevices as any).getDisplayMedia);
+
   const myDreamName = useMemo(
     () => resolvedName || displayName || "（未設定）",
     [resolvedName, displayName]
@@ -228,6 +232,10 @@ function GarageV2Inner() {
       if (isSharingScreen) {
         await stopScreenShare();
       } else {
+        if (!canLocalScreenShare) {
+          setShareHint("この端末/ブラウザでは映写できません。PCからお試しください。");
+          return;
+        }
         setShareHint(COPY.SHARE_HINT_BEFORE);
         await startScreenShare();
       }
@@ -297,96 +305,98 @@ function GarageV2Inner() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* 固定ヘッダー：ロゴ（瞼の裏側ボタン）＋タイトル＋右上3ボタン */}
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-3 px-4 py-2 md:px-6 md:py-3 bg-[rgba(13,15,18,0.98)] border-b border-[rgba(255,255,255,0.08)]">
-        <button
-          type="button"
-          onClick={() => setShowShareOverlay(true)}
-          className="flex items-center gap-2 md:gap-3 shrink-0 focus:outline-none"
-          aria-label="瞼の裏側（画面共有）を開く"
-        >
-          <span
-            className={
-              "relative flex rounded-full border-2 transition-all " +
-              (activeScreen
-                ? "border-amber-400/90 bg-amber-500/20 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
-                : "border-[rgba(255,255,255,0.3)] bg-[rgba(0,0,0,0.4)]")
-            }
-          >
-            <Image
-              src="/logo-nemumi.png"
-              alt=""
-              width={40}
-              height={40}
-              className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full"
-            />
-          </span>
-          <h1 className="font-shippori text-[0.95rem] md:text-[1.1rem] font-bold text-secondary leading-tight">
-            {COPY.PAGE_TITLE}
-          </h1>
-        </button>
-        <div className="sm:min-w-[140px] flex items-center gap-1.5 md:gap-2 justify-end">
+      <header className="sticky top-0 z-40 bg-[rgba(13,15,18,0.98)] border-b border-[rgba(255,255,255,0.08)]">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 md:px-6 md:py-3">
           <button
             type="button"
-            onClick={handleToggleMute}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem]"
+            onClick={() => setShowShareOverlay(true)}
+            className="flex items-center gap-2 md:gap-3 shrink-0 focus:outline-none"
+            aria-label="瞼の裏側（画面共有）を開く"
           >
             <span
               className={
-                "relative inline-flex items-center justify-center w-4 h-4 rounded-full border " +
-                (isAudioOn
-                  ? "border-[rgba(224,90,51,0.9)] bg-[rgba(224,90,51,0.12)]"
-                  : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
+                "relative flex rounded-full border-2 transition-all " +
+                (activeScreen
+                  ? "border-amber-400/90 bg-amber-500/20 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
+                  : "border-[rgba(255,255,255,0.3)] bg-[rgba(0,0,0,0.4)]")
               }
             >
-              {isAudioOn ? (
-                <span className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.95)]" />
-              ) : (
-                <span className="w-2.5 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-18deg]" />
-              )}
+              <Image
+                src="/logo-nemumi.png"
+                alt=""
+                width={40}
+                height={40}
+                className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full"
+              />
             </span>
-            <span className="text-[rgba(255,255,255,0.85)]">
-              {isAudioOn ? COPY.BTN_MUTE_ON : COPY.BTN_MUTE_OFF}
-            </span>
+            <h1 className="font-shippori text-[0.95rem] md:text-[1.1rem] font-bold text-secondary leading-tight">
+              {COPY.PAGE_TITLE}
+            </h1>
           </button>
-          <button
-            type="button"
-            onClick={handleToggleShare}
+          <div className="sm:min-w-[140px] flex items-center gap-1.5 md:gap-2 justify-end">
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem]"
+            >
+              <span
+                className={
+                  "relative inline-flex items-center justify-center w-4 h-4 rounded-full border " +
+                  (isAudioOn
+                    ? "border-[rgba(224,90,51,0.9)] bg-[rgba(224,90,51,0.12)]"
+                    : "border-[rgba(255,255,255,0.4)] bg-[rgba(0,0,0,0.6)]")
+                }
+              >
+                {isAudioOn ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.95)]" />
+                ) : (
+                  <span className="w-2.5 h-[1px] bg-[rgba(255,255,255,0.7)] rotate-[-18deg]" />
+                )}
+              </span>
+              <span className="text-[rgba(255,255,255,0.85)]">
+                {isAudioOn ? COPY.BTN_MUTE_ON : COPY.BTN_MUTE_OFF}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleShare}
+              className={
+                "px-2.5 py-1.5 rounded-full border hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)] " +
+                (isSharingScreen
+                  ? "border-amber-400/50 bg-amber-500/10"
+                  : "border-[rgba(255,255,255,0.25)]")
+              }
+            >
+              {isSharingScreen ? COPY.BTN_SHARE_STOP : COPY.BTN_SHARE}
+            </button>
+            <button
+              type="button"
+              onClick={handleLeave}
+              className="px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)]"
+            >
+              {COPY.BTN_LEAVE}
+            </button>
+          </div>
+        </div>
+
+        {/* 情報バー：D.N. と参加者・ステータス（ヘッダー内に統合） */}
+        <div className="flex items-center justify-between gap-3 px-4 pb-2 text-[0.68rem] text-[rgba(255,255,255,0.6)]">
+          <span>
+            {COPY.LABEL_DN}
+            <span className="text-secondary ml-1">{myDreamName}</span>
+          </span>
+          <span>参加者: {participantIds.length}</span>
+          <span
             className={
-              "px-2.5 py-1.5 rounded-full border hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)] " +
-              (isSharingScreen
-                ? "border-amber-400/50 bg-amber-500/10"
-                : "border-[rgba(255,255,255,0.25)]")
+              joined
+                ? "text-amber-400/90 font-medium"
+                : "text-[rgba(255,255,255,0.45)]"
             }
           >
-            {isSharingScreen ? COPY.BTN_SHARE_STOP : COPY.BTN_SHARE}
-          </button>
-          <button
-            type="button"
-            onClick={handleLeave}
-            className="px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem] text-[rgba(255,255,255,0.85)]"
-          >
-            {COPY.BTN_LEAVE}
-          </button>
+            {joined ? COPY.STATUS_SYNC : COPY.STATUS_ASYNC}
+          </span>
         </div>
       </header>
-
-      {/* 情報バー：D.N. と参加者・ステータス（邪魔にならない位置） */}
-      <div className="flex items-center justify-between gap-3 px-4 py-1.5 text-[0.68rem] text-[rgba(255,255,255,0.6)] bg-[rgba(13,15,18,0.55)] border-b border-[rgba(255,255,255,0.06)]">
-        <span>
-          {COPY.LABEL_DN}
-          <span className="text-secondary ml-1">{myDreamName}</span>
-        </span>
-        <span>参加者: {participantIds.length}</span>
-        <span
-          className={
-            joined
-              ? "text-amber-400/90 font-medium"
-              : "text-[rgba(255,255,255,0.45)]"
-          }
-        >
-          {joined ? COPY.STATUS_SYNC : COPY.STATUS_ASYNC}
-        </span>
-      </div>
 
       {/* チャット本文（スクロール） */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 pb-28">
@@ -417,7 +427,10 @@ function GarageV2Inner() {
       </div>
 
       {/* 入力エリア（フッター固定） */}
-      <div className="fixed left-0 right-0 bottom-0 z-40">
+      <div
+        className="fixed left-0 right-0 bottom-0 z-40"
+        style={{ bottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="max-w-[960px] mx-auto border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.55)] backdrop-blur-md">
           {shareHint && (
             <div className="mb-2 text-[0.72rem] text-[rgba(255,255,255,0.65)]">
@@ -435,7 +448,7 @@ function GarageV2Inner() {
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={COPY.PLACEHOLDER_CHAT}
-              className="flex-1 min-w-0 bg-[rgba(0,0,0,0.35)] border border-[rgba(255,255,255,0.16)] rounded-md text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
+              className="flex-1 min-w-0 bg-[rgba(0,0,0,0.35)] border border-[rgba(255,255,255,0.16)] rounded-md text-[16px] md:text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
             />
             <button
               type="button"
