@@ -211,7 +211,7 @@ function GarageV2Inner() {
 
   if (!hasJoined) {
     return (
-      <div className="flex flex-col items-center justify-center h-[520px] md:h-[480px] bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6">
+      <div className="flex flex-col items-center justify-center min-h-[520px] md:h-[480px] bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6">
         <div className="max-w-md w-full space-y-4 text-center">
           <h2 className="text-[1rem] md:text-[1.1rem] text-secondary tracking-[0.18em]">
             まどろみの窓
@@ -242,21 +242,21 @@ function GarageV2Inner() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 h-[520px] md:h-[480px]">
+    <div className="flex flex-col md:flex-row gap-4 min-h-[520px] md:h-[480px]">
       {/* チャットメインエリア */}
       <div className="flex-1 flex flex-col min-h-0 bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <div className="text-[0.8rem] text-dim">
               {joined
-                ? "チャネル中 - まどろみの窓"
+                ? "まどろみの窓 — Channeling"
                 : hasJoined
                   ? "チャネルは終了しました"
                   : "チャネル待機中 - まどろみの窓"}
             </div>
             {hasJoined && (
               <div className="text-[0.7rem] text-[rgba(255,255,255,0.6)]">
-                このセッションでのあなたの夢氏名：
+                夢氏名:
                 <span className="text-secondary">
                   {resolvedName || displayName || "（未設定）"}
                 </span>
@@ -269,7 +269,7 @@ function GarageV2Inner() {
           <div className="flex flex-col items-end gap-1">
             {joined && (
               <span className="px-3 py-1 rounded-full text-[0.7rem] bg-[rgba(224,90,51,0.18)] text-[rgba(255,230,210,0.95)] border border-[rgba(224,90,51,0.5)]">
-                レムリアテレビとチャネル中
+                Channeling — REMURIA TELEPATHIC NETWORK
               </span>
             )}
           </div>
@@ -297,7 +297,7 @@ function GarageV2Inner() {
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="メッセージを入力（Enterで送信 / Shift+Enterで改行）"
+            placeholder="寝言を綴る"
             className="w-full bg-[rgba(0,0,0,0.4)] border border-[rgba(255,255,255,0.16)] rounded-md text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
           />
           <div className="flex justify-end">
@@ -339,8 +339,7 @@ function GarageV2Inner() {
           )}
         </div>
         <div className="bg-[rgba(13,15,18,0.9)] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 space-y-2 text-[0.8rem] text-dim">
-          <div className="flex items-center justify-between">
-            <span>声のスイッチ</span>
+          <div className="flex items-center justify-end">
             <button
               type="button"
               onClick={handleToggleMute}
@@ -361,7 +360,7 @@ function GarageV2Inner() {
                 )}
               </span>
               <span className="text-[0.7rem] text-[rgba(255,255,255,0.8)]">
-                {isAudioOn ? "声を届けている" : "沈黙中"}
+                {isAudioOn ? "寝言中" : "沈黙中"}
               </span>
             </button>
           </div>

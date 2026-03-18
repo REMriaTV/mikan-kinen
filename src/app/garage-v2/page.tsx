@@ -1,6 +1,11 @@
 import GarageV2Client from "@/components/GarageV2Client";
-import Link from "next/link";
 import Image from "next/image";
+
+// 仮タイトル＆コピー（後で差し替えやすいように定数化）
+const GARAGE_V2_TITLE_JP = "バックヤード・ヘッド・チャンネル";
+const GARAGE_V2_TITLE_EN = "BACKYARD HEAD CHANNEL";
+const GARAGE_V2_DESCRIPTION =
+  "無意識下で繋がる場所。眠っている作品を起こしに行く。";
 
 export default function GarageV2Page() {
   return (
@@ -17,29 +22,21 @@ export default function GarageV2Page() {
             />
             <div>
               <p className="text-[0.6rem] tracking-[0.5em] text-dim uppercase">
-                Garage Hunt v2
+                {GARAGE_V2_TITLE_EN}
               </p>
               <h1 className="font-shippori text-[clamp(1.5rem,3vw,2rem)] font-bold leading-snug">
-                ガレージハント 実験版スタジオ
+                {GARAGE_V2_TITLE_JP}
               </h1>
             </div>
           </div>
           <p className="text-secondary text-sm leading-relaxed max-w-[620px]">
-            レムリアテレビのガレージ配信UIをカスタムで実験する専用ページです。
-            音声とチャットが中心で、画面共有はサムネイルとして控えめに表示します。
+            {GARAGE_V2_DESCRIPTION}
           </p>
         </header>
 
         <section>
           <GarageV2Client />
         </section>
-
-        <footer className="flex items-center justify-between text-[0.78rem] text-dim">
-          <p>※ このページは開発用です。3/20パイロット本番では使用しません。</p>
-          <Link href="/garage" className="text-gold hover:underline">
-            ← 既存のガレージハントページへ
-          </Link>
-        </footer>
       </div>
     </main>
   );
