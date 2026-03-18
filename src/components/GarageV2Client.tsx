@@ -391,7 +391,10 @@ function GarageV2Inner() {
       </div>
 
       {/* 入力エリア（固定） */}
-      <div className="border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.95)]">
+      <div
+        className="border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.95)]"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
         <div className="flex gap-2 items-end">
           <textarea
             rows={2}
@@ -455,7 +458,7 @@ function GarageV2Inner() {
 export default function GarageV2Client() {
   return (
     <DailyProvider url={GARAGE_ROOM_URL}>
-      <div className="min-h-screen flex flex-col max-w-[960px] mx-auto">
+      <div className="min-h-[100dvh] flex flex-col max-w-[960px] mx-auto">
         <GarageV2Inner />
       </div>
     </DailyProvider>
