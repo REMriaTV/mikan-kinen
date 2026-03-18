@@ -20,11 +20,11 @@ const COPY = {
   STATUS_ASYNC: "REM Async",
   PLACEHOLDER_CHAT: "寝言をつづる",
   SEND_BUTTON: "zzZ",
-  BTN_MUTE_OFF: "沈黙中",
-  BTN_MUTE_ON: "寝言中",
+  BTN_MUTE_OFF: "ROM",
+  BTN_MUTE_ON: "REM",
   BTN_SHARE: "映写する",
   BTN_SHARE_STOP: "映写を終える",
-  BTN_LEAVE: "退出",
+  BTN_LEAVE: "覚醒",
   SHARE_HINT_BEFORE: "映写する内容（画面/ウィンドウ/タブ）を選びます。",
   SHARE_HINT_ACTIVE: "映写中です。ロゴを押すと瞼の裏側が開きます。",
   SHARE_HINT_CANCELED: "映写は開始されませんでした（キャンセル）。",
@@ -155,6 +155,10 @@ function GarageV2Inner() {
     useCallback(() => {
       setJoined(false);
       setIsAudioOn(false);
+      setHasJoined(false);
+      setResolvedName(null);
+      setChatInput("");
+      setChatMessages([]);
     }, [])
   );
 
@@ -228,6 +232,13 @@ function GarageV2Inner() {
   const handleLeave = () => {
     if (!daily) return;
     daily.leave();
+    // 体感を速くするため先に戻す（left-meetingでも同じリセットが走る）
+    setJoined(false);
+    setIsAudioOn(false);
+    setHasJoined(false);
+    setResolvedName(null);
+    setChatInput("");
+    setChatMessages([]);
   };
 
   const handleToggleMute = () => {
@@ -399,7 +410,7 @@ function GarageV2Inner() {
           <span
             className={
               joined
-                ? "text-amber-400/90 font-medium"
+                ? "text-amber-400/90 font-medium animate-pulse"
                 : "text-[rgba(255,255,255,0.45)]"
             }
           >
