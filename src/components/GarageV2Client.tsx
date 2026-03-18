@@ -244,7 +244,12 @@ function GarageV2Inner() {
   const handleToggleMute = () => {
     if (!daily) return;
     const next = !daily.localAudio();
-    daily.setLocalAudio(next);
+    if (next) {
+      daily.setLocalAudio(true);
+    } else {
+      // iOSのマイク使用インジケータを確実に消すため、トラックを破棄する
+      daily.setLocalAudio(false, { forceDiscardTrack: true } as any);
+    }
     setIsAudioOn(next);
   };
 
