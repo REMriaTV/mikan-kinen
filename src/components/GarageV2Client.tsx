@@ -62,6 +62,12 @@ function getUserColor(name: string): string {
   return USER_COLORS[hashString(name) % USER_COLORS.length];
 }
 
+function withAlpha(rgba: string, alpha: number): string {
+  const m = rgba.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)$/);
+  if (!m) return rgba;
+  return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${alpha})`;
+}
+
 type ChatMessage = {
   id: string;
   from: string;
@@ -125,6 +131,7 @@ function GarageV2Inner() {
   const [showShareOverlay, setShowShareOverlay] = useState(false);
   const [shareHint, setShareHint] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isComposing, setIsComposing] = useState(false);
 
   const canLocalScreenShare =
     typeof window !== "undefined" &&
@@ -155,7 +162,10 @@ function GarageV2Inner() {
     "app-message",
     useCallback((ev: any) => {
       if (!ev?.data || typeof ev.data.text !== "string") return;
-      const from = ev?.from?.user_name || "guest";
+      const from =
+        typeof ev?.data?.fromName === "string" && ev.data.fromName.trim()
+          ? ev.data.fromName.trim()
+          : "guest";
       setChatMessages((prev) => [
         ...prev,
         {
@@ -187,20 +197,21 @@ function GarageV2Inner() {
   };
 
   const handleSend = async () => {
-    if (!daily || !chatInput.trim()) return;
-    const text = chatInput.trim();
+    if (!daily) return;
+    const text = chatInput.trim() || COPY.SEND_BUTTON;
     setChatInput("");
+    if (textareaRef.current) textareaRef.current.value = "";
     setChatMessages((prev) => [
       ...prev,
       {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        from: "you",
+        from: myDreamName,
         text,
         timestamp: Date.now(),
       },
     ]);
     try {
-      daily.sendAppMessage({ text }, "*");
+      daily.sendAppMessage({ text, fromName: myDreamName }, "*");
     } catch {
       // 送信失敗は握りつぶす
     }
@@ -208,7 +219,7 @@ function GarageV2Inner() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
       e.preventDefault();
       handleSend();
     }
@@ -245,8 +256,7 @@ function GarageV2Inner() {
     }
   };
 
-  const displayNameFor = (from: string) =>
-    from === "you" ? (resolvedName || displayName || "（未設定）") : from;
+  const displayNameFor = (from: string) => from;
 
   // 映写状態の変化に合わせて短いヒントを出す
   useEffect(() => {
@@ -409,6 +419,7 @@ function GarageV2Inner() {
           {[...chatMessages].reverse().map((msg) => {
             const name = displayNameFor(msg.from);
             const color = getUserColor(name);
+            const bubbleBg = withAlpha(color, 0.12);
             return (
               <div key={msg.id} className="flex gap-2 items-baseline">
                 <span
@@ -417,7 +428,10 @@ function GarageV2Inner() {
                 >
                   {name}:
                 </span>
-                <span className="px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.04)] text-secondary break-words">
+                <span
+                  className="px-3 py-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] text-secondary break-words"
+                  style={{ backgroundColor: bubbleBg }}
+                >
                   {msg.text}
                 </span>
               </div>
@@ -447,6 +461,8 @@ function GarageV2Inner() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
               placeholder={COPY.PLACEHOLDER_CHAT}
               className="flex-1 min-w-0 bg-[rgba(0,0,0,0.35)] border border-[rgba(255,255,255,0.16)] rounded-md text-[16px] md:text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
             />
