@@ -118,7 +118,7 @@ function ScreenShareVideo({
   );
 }
 
-function GarageV2Inner() {
+function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
   const daily = useDaily();
   const participantIds = useParticipantIds();
   const [joined, setJoined] = useState(false);
@@ -297,6 +297,19 @@ function GarageV2Inner() {
     const maxPx = 22 * 4 + 16; // おおよそ 4行 + padding
     el.style.height = `${Math.min(el.scrollHeight, maxPx)}px`;
   }, [chatInput]);
+
+  // 予定終了時の強制クローズ（休止画面表示と同時に部屋から退出）
+  useEffect(() => {
+    if (!shouldForceClose) return;
+    if (!daily) return;
+    daily.leave();
+    setJoined(false);
+    setIsAudioOn(false);
+    setHasJoined(false);
+    setResolvedName(null);
+    setChatInput("");
+    setChatMessages([]);
+  }, [shouldForceClose, daily]);
 
   if (!hasJoined) {
     return (
@@ -544,13 +557,17 @@ function GarageV2Inner() {
   );
 }
 
-export default function GarageV2Client() {
+export default function GarageV2Client({
+  shouldForceClose = false,
+}: {
+  shouldForceClose?: boolean;
+}) {
   return (
     <DailyProvider url={GARAGE_ROOM_URL}>
       <div className="min-h-[100dvh] flex flex-col max-w-[960px] mx-auto">
         {/* リモート音声再生（これがないと相手の声が聞こえない） */}
         <DailyAudio />
-        <GarageV2Inner />
+        <GarageV2Inner shouldForceClose={shouldForceClose} />
       </div>
     </DailyProvider>
   );
