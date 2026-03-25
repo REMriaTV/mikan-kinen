@@ -2,9 +2,24 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import {
+  defaultBroadcastConfig,
+  type BroadcastConfig,
+} from "@/lib/broadcast-config";
 
-export default function ColorBarScreen() {
+export type ColorBarScreenProps = {
+  networkTitle?: BroadcastConfig["colorBar"]["networkTitle"];
+  sleepingText?: BroadcastConfig["colorBar"]["sleepingText"];
+  nextText?: BroadcastConfig["colorBar"]["nextText"];
+  wakeText?: BroadcastConfig["colorBar"]["wakeText"];
+};
+
+export default function ColorBarScreen({
+  networkTitle = defaultBroadcastConfig.colorBar.networkTitle,
+  sleepingText = defaultBroadcastConfig.colorBar.sleepingText,
+  nextText = defaultBroadcastConfig.colorBar.nextText,
+  wakeText = defaultBroadcastConfig.colorBar.wakeText,
+}: ColorBarScreenProps) {
   return (
     <div
       style={{
@@ -76,7 +91,7 @@ export default function ColorBarScreen() {
             marginBottom: "16px",
           }}
         >
-          REMREAL TELEPATHIC NETWORK
+          {networkTitle}
         </div>
         <div
           style={{
@@ -86,10 +101,10 @@ export default function ColorBarScreen() {
             marginBottom: "6px",
           }}
         >
-          只今放送休眠中
+          {sleepingText}
         </div>
         <div style={{ color: "#E8E4DF", fontSize: "15px", fontWeight: 500 }}>
-          次回の夢でお会いしましょう
+          {nextText}
         </div>
       </div>
 
@@ -108,7 +123,7 @@ export default function ColorBarScreen() {
           }}
         >
           <span style={{ fontSize: 12, opacity: 0.9, letterSpacing: "0.1em" }}>
-            おきる
+            {wakeText}
           </span>
         </Link>
       </div>

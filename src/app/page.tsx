@@ -1,7 +1,39 @@
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import BroadcastCountdownBanner from "@/components/BroadcastCountdownBanner";
+import {
+  defaultBroadcastConfig,
+  normalizeBroadcastConfig,
+  type BroadcastConfig,
+} from "@/lib/broadcast-config";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+async function loadBroadcastConfig(): Promise<BroadcastConfig> {
+  const url = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRoleKey) return defaultBroadcastConfig;
+
+  try {
+    const supabase = createClient(url, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+    const { data, error } = await supabase
+      .from("broadcast_config")
+      .select("config")
+      .eq("id", "singleton")
+      .maybeSingle();
+    if (error) return defaultBroadcastConfig;
+    const rawConfig: unknown = (data as { config?: unknown } | null | undefined)
+      ?.config;
+    return normalizeBroadcastConfig(rawConfig);
+  } catch {
+    return defaultBroadcastConfig;
+  }
+}
+
+export default async function Home() {
+  const cfg = await loadBroadcastConfig();
   return (
     <main>
       <BroadcastCountdownBanner />
@@ -11,7 +43,7 @@ export default function Home() {
           <span className="text-gold">▶</span> レムリアテレビ意識波息株式会社　特別番組
         </p>
         <div className="inline-block border border-gold text-gold text-[0.65rem] tracking-[0.35em] px-5 py-1.5 mb-10 animate-fade-in" style={{ animationDelay: "0.6s" }}>
-          2026.3.30 MON
+          {cfg.topPage.heroDateBadge}
         </div>
         <h1 className="font-shippori font-extrabold text-[clamp(1.8rem,5vw,3.2rem)] leading-tight mb-2 animate-fade-in" style={{ animationDelay: "0.9s" }}>
           【未完記念トークショー】<br />百面惣 ～育まれるもの～
@@ -20,7 +52,7 @@ export default function Home() {
           完成してなくても、語りたいことがある。
         </p>
         <p className="text-[0.8rem] tracking-[0.3em] text-dim animate-fade-in" style={{ animationDelay: "1.4s" }}>
-          <strong className="text-primary text-[1.1rem]">2026年 3月30日（月）22:00〜</strong>
+          <strong className="text-primary text-[1.1rem]">{cfg.topPage.heroDateLine}</strong>
           <br />
           ONLINE / 無料
         </p>
@@ -109,12 +141,7 @@ export default function Home() {
           当日の内容
         </h2>
         <ol className="list-none counter-reset-program">
-          {[
-            { title: "百面惣と未完の世界", desc: "44作品の全体像を紹介。なぜこんなに作り続けているのか。" },
-            { title: "プロット＆原稿 大公開", desc: "実際の制作ノート、ストーリーボード、途中原稿をスクリーンに映しながら語る。" },
-            { title: "Q&A ─ 聞きたいこと、なんでも", desc: "Zoomのチャット・挙手機能を使って、自由に質問。" },
-            { title: "打ち上げ ─ 酒でも飲みながら", desc: "作品の話、創作の話、なんでもありのフリートーク。" },
-          ].map((item, i) => (
+          {cfg.programItems.map((item, i) => (
             <li key={i} className="py-5 border-b border-[rgba(255,255,255,0.04)] flex gap-5 items-baseline">
               <span className="text-[0.7rem] text-gold tracking-[0.1em] shrink-0">
                 {String(i + 1).padStart(2, "0")}
@@ -154,7 +181,8 @@ export default function Home() {
           参加する
         </h2>
         <p className="text-secondary text-[0.88rem] mb-10">
-          2026年3月30日（月）22:00〜 / オンライン / 無料<br />
+          {cfg.topPage.joinDateLine}
+          <br />
           お風呂に入って、<br />布団の中からどうぞ。
         </p>
         <a
