@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function ColorBarScreen() {
   return (
@@ -64,7 +66,7 @@ export default function ColorBarScreen() {
       </div>
 
       {/* 案内テキスト */}
-      <div style={{ textAlign: "center", marginTop: "24px" }}>
+      <div style={{ textAlign: "center", marginTop: "18px" }}>
         <div
           style={{
             color: "#E8E4DF",
@@ -84,11 +86,31 @@ export default function ColorBarScreen() {
             marginBottom: "6px",
           }}
         >
-          しばらくお待ちください
+          只今放送休眠中
         </div>
         <div style={{ color: "#E8E4DF", fontSize: "15px", fontWeight: 500 }}>
-          本日 19:23 より放送開始
+          次回の夢でお会いしましょう
         </div>
+      </div>
+
+      <div style={{ marginTop: "14px" }}>
+        <Link
+          href="/"
+          style={{
+            display: "inline-block",
+            padding: "6px 12px",
+            borderRadius: "999px",
+            textDecoration: "none",
+            color: "#E8E4DF",
+            background: "rgba(0,0,0,0.10)",
+            border: "none",
+            backdropFilter: "blur(6px)",
+          }}
+        >
+          <span style={{ fontSize: 12, opacity: 0.9, letterSpacing: "0.1em" }}>
+            おきる
+          </span>
+        </Link>
       </div>
     </div>
   );

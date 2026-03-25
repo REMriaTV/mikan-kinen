@@ -11,7 +11,7 @@ export default function Home() {
           <span className="text-gold">▶</span> レムリアテレビ意識波息株式会社　特別番組
         </p>
         <div className="inline-block border border-gold text-gold text-[0.65rem] tracking-[0.35em] px-5 py-1.5 mb-10 animate-fade-in" style={{ animationDelay: "0.6s" }}>
-          ONE NIGHT ONLY ─ 2026.3.17 MON
+          2026.3.30 MON
         </div>
         <h1 className="font-shippori font-extrabold text-[clamp(1.8rem,5vw,3.2rem)] leading-tight mb-2 animate-fade-in" style={{ animationDelay: "0.9s" }}>
           【未完記念トークショー】<br />百面惣 ～育まれるもの～
@@ -20,9 +20,9 @@ export default function Home() {
           完成してなくても、語りたいことがある。
         </p>
         <p className="text-[0.8rem] tracking-[0.3em] text-dim animate-fade-in" style={{ animationDelay: "1.4s" }}>
-          <strong className="text-primary text-[1.1rem]">2026年 3月17日（月）</strong>
+          <strong className="text-primary text-[1.1rem]">2026年 3月30日（月）22:00〜</strong>
           <br />
-          ONLINE / ZOOM / 無料
+          ONLINE / 無料
         </p>
         <div className="max-w-[520px] mt-12 animate-fade-in" style={{ animationDelay: "1.7s" }}>
           <p className="font-shippori text-[0.95rem] text-secondary leading-[2.2] tracking-[0.05em]">
@@ -154,8 +154,8 @@ export default function Home() {
           参加する
         </h2>
         <p className="text-secondary text-[0.88rem] mb-10">
-          2026年3月17日（月）/ オンライン / Zoom / 無料<br />
-          プロデューサーの家に集まって、<br />酒を飲みながら面白い話を聞く夜。
+          2026年3月30日（月）22:00〜 / オンライン / 無料<br />
+          お風呂に入って、<br />布団の中からどうぞ。
         </p>
         <a
           href="https://forms.gle/sv8kSGbv2qhSzh3M9"
@@ -166,7 +166,7 @@ export default function Home() {
           参加を申し込む
         </a>
         <p className="mt-4 text-[0.72rem] text-dim">
-          ※ Googleフォームが開きます。Zoomリンクは申込後にお送りします。
+          ※ Googleフォームが開きます。
         </p>
       </section>
 

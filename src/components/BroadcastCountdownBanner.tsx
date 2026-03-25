@@ -7,18 +7,18 @@ const COPY = {
   COUNTDOWN_PREFIX: "あと",
   COUNTDOWN_SUFFIX: "",
   NOW_CHANNELING: "Now Channeling...",
-  REM_CHAT_LABEL_BEFORE: "REM Chat（3/20 19:23 に開局）",
+  BROADCAST_LABEL: "2026.3.30 BROADCAST",
+  REM_CHAT_LABEL_BEFORE: "REM Chat（3/30 22:00 に開局）",
   REM_CHAT_LABEL_AFTER: "REM Chat に入る",
   REM_CHAT_NOTE_BEFORE:
-    "本番前でも入れます（動作確認用）。開局は 3/20 19:23 JST。",
+    "開始5分前になると、夢の世界がひらきます。",
   REM_CHAT_NOTE_AFTER: "交信を開始できます。",
-  EVENT_DATE: "2026年3月20日（月・春分の日）19:23 – 20:53",
-  EVENT_TAGLINE: "ボイドタイムの幕開けとともに開局。",
-  EVENT_NOTE: "枕をご用意ください。",
+  EVENT_DATE: "2026年3月30日（月）22:00〜",
+  EVENT_TAGLINE: "月曜の夜は夢テレ。",
 } as const;
 
-// 2026-03-20 19:23:00 JST = 2026-03-20T10:23:00Z
-const TARGET_EPOCH_MS = Date.parse("2026-03-20T10:23:00Z");
+// 2026-03-30 22:00:00 JST = 2026-03-30T13:00:00Z
+const TARGET_EPOCH_MS = Date.parse("2026-03-30T13:00:00Z");
 
 function formatCountdown(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -30,15 +30,20 @@ function formatCountdown(ms: number) {
 }
 
 export default function BroadcastCountdownBanner() {
-  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  const [mounted, setMounted] = useState(false);
+  // SSR と hydration 初期を一致させるため、Date.now() は描画に使わない
+  const [nowMs, setNowMs] = useState<number>(TARGET_EPOCH_MS);
 
   useEffect(() => {
+    setMounted(true);
+    setNowMs(Date.now());
     const t = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(t);
   }, []);
 
   const remainingMs = TARGET_EPOCH_MS - nowMs;
-  const isLive = remainingMs <= 0;
+  // プレースホルダー表示中は常に "放送前" 扱いにして初期HTML一致を担保
+  const isLive = mounted && remainingMs <= 0;
   const countdown = useMemo(() => formatCountdown(remainingMs), [remainingMs]);
 
   return (
@@ -47,16 +52,25 @@ export default function BroadcastCountdownBanner() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="space-y-2">
             <p className="text-[0.65rem] tracking-[0.45em] uppercase text-[rgba(232,228,223,0.65)]">
-              2026.3.20 Broadcast
+              {COPY.BROADCAST_LABEL}
             </p>
             <div className="font-shippori font-bold text-[clamp(1.2rem,3vw,1.8rem)] leading-tight">
               {isLive ? (
                 <span className="text-gold">{COPY.NOW_CHANNELING}</span>
               ) : (
                 <span>
-                  {COPY.COUNTDOWN_PREFIX} {countdown.days}日 {countdown.hours}時間{" "}
-                  {countdown.minutes}分 {countdown.seconds}秒
-                  {COPY.COUNTDOWN_SUFFIX}
+                  {mounted ? (
+                    <>
+                      {COPY.COUNTDOWN_PREFIX} {countdown.days}日 {countdown.hours}時間{" "}
+                      {countdown.minutes}分 {countdown.seconds}秒
+                      {COPY.COUNTDOWN_SUFFIX}
+                    </>
+                  ) : (
+                    <>
+                      {COPY.COUNTDOWN_PREFIX} --日 --時間 --分 --秒
+                      {COPY.COUNTDOWN_SUFFIX}
+                    </>
+                  )}
                 </span>
               )}
             </div>
@@ -84,9 +98,6 @@ export default function BroadcastCountdownBanner() {
           <div className="space-y-1 text-[0.9rem] text-[rgba(232,228,223,0.86)] leading-[1.9]">
             <div>{COPY.EVENT_DATE}</div>
             <div>{COPY.EVENT_TAGLINE}</div>
-            <div className="text-[0.9rem] text-[rgba(232,228,223,0.7)]">
-              {COPY.EVENT_NOTE}
-            </div>
           </div>
         </div>
       </div>
