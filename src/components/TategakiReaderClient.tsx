@@ -103,7 +103,7 @@ export default function TategakiReaderClient({
           const dx = e.changedTouches[0].clientX - touchStartX.current;
           const dy = e.changedTouches[0].clientY - touchStartY.current;
           if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 50) return;
-          if (dx < 0) nextPage();
+          if (dx > 0) nextPage();
           else prevPage();
         }}
       >
