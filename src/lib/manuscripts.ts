@@ -48,3 +48,50 @@ export function buildFormattedParagraphs(section: string): string[] {
     );
 }
 
+export type ParagraphBlock = {
+  text: string;
+  gapLines: number;
+};
+
+export function buildParagraphBlocks(section: string): ParagraphBlock[] {
+  const lines = section.split("\n");
+  const blocks: Array<{ raw: string; gapLines: number }> = [];
+
+  let currentLines: string[] = [];
+  let pendingGapLines = 0;
+  let currentGapBefore = 0;
+
+  const flushCurrent = () => {
+    if (currentLines.length === 0) return;
+    blocks.push({
+      raw: currentLines.join("\n"),
+      gapLines: currentGapBefore,
+    });
+    currentLines = [];
+    currentGapBefore = 0;
+  };
+
+  for (const line of lines) {
+    if (line.trim() === "") {
+      flushCurrent();
+      pendingGapLines += 1;
+      continue;
+    }
+
+    if (currentLines.length === 0) {
+      currentGapBefore = pendingGapLines;
+      pendingGapLines = 0;
+    }
+    currentLines.push(line);
+  }
+  flushCurrent();
+
+  return blocks.map((b) => ({
+    gapLines: b.gapLines,
+    text: b.raw
+      .split("\n")
+      .map((line) => formatParagraph(line))
+      .join("\n"),
+  }));
+}
+

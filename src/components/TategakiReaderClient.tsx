@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { buildFormattedParagraphs } from "@/lib/manuscripts";
+import { buildParagraphBlocks } from "@/lib/manuscripts";
 
 type Props = {
   workId: string;
@@ -169,13 +169,21 @@ export default function TategakiReaderClient({
               );
             }
 
-            const paragraphs = buildFormattedParagraphs(page.section);
+            const blocks = buildParagraphBlocks(page.section);
             return (
               <article key={`body-${index}`} className={className}>
                 <div className="max-h-[calc(100dvh-144px)] overflow-hidden [writing-mode:vertical-rl] [text-orientation:mixed] font-shippori text-[15px] leading-[2] tracking-[0.08em] md:text-[17px] md:leading-[2.2]">
-                  {paragraphs.map((p, idx) => (
-                    <p key={idx} className="whitespace-pre-line">
-                      {p}
+                  {blocks.map((block, idx) => (
+                    <p
+                      key={idx}
+                      className="whitespace-pre-line"
+                      style={
+                        idx === 0
+                          ? undefined
+                          : { marginBlockStart: `${Math.max(1, block.gapLines) * 2}em` }
+                      }
+                    >
+                      {block.text}
                     </p>
                   ))}
                 </div>
