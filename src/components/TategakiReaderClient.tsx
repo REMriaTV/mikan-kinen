@@ -115,16 +115,16 @@ export default function TategakiReaderClient({
             const isActive = index === currentPage;
             const className = [
               "absolute inset-0 flex items-center justify-center px-6 pb-20 pt-16 md:px-12 md:pb-24 md:pt-20",
-              "transition-all duration-[600ms] ease-[ease]",
-              isActive ? "opacity-100 translate-x-0" : "pointer-events-none opacity-0",
+              "transition-opacity duration-150 ease-linear md:transition-all md:duration-[600ms] md:ease-[ease]",
+              isActive ? "opacity-100 md:translate-x-0" : "pointer-events-none opacity-0",
               !isActive && index < currentPage
                 ? direction === "next"
-                  ? "translate-x-[30px]"
-                  : "-translate-x-[30px]"
+                  ? "md:translate-x-[30px]"
+                  : "md:-translate-x-[30px]"
                 : !isActive
                   ? direction === "next"
-                    ? "-translate-x-[30px]"
-                    : "translate-x-[30px]"
+                    ? "md:-translate-x-[30px]"
+                    : "md:translate-x-[30px]"
                   : "",
             ].join(" ");
 
