@@ -107,8 +107,8 @@ export default function TategakiReaderClient({
           else prevPage();
         }}
       >
-        <div className="absolute inset-y-0 left-0 w-1/2 z-30 cursor-e-resize" onClick={nextPage} />
-        <div className="absolute inset-y-0 right-0 w-1/2 z-30 cursor-w-resize" onClick={prevPage} />
+        <div className="absolute inset-y-0 left-0 w-1/2 z-30 cursor-w-resize" onClick={nextPage} />
+        <div className="absolute inset-y-0 right-0 w-1/2 z-30 cursor-e-resize" onClick={prevPage} />
 
         <div className="relative h-full w-full overflow-hidden">
           {pages.map((page, index) => {
@@ -198,7 +198,7 @@ export default function TategakiReaderClient({
           {currentPage + 1} / {totalPages}
         </div>
         <div className="pointer-events-auto flex items-center gap-1.5">
-          {pages.map((_, i) => (
+          {[...pages.keys()].reverse().map((i) => (
             <button
               key={i}
               onClick={() => goToPage(i)}
