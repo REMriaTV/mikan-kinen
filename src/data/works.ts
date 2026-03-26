@@ -327,6 +327,25 @@ export const mainWorks: Work[] = [
     broadcastImage: "金10",
     comment: "歴史の捏造に勤しむ家紋デザイナーの紋次郎が解決するお家騒動の数々をスリリングに説いていくミステリー作品",
   },
+  {
+    id: 103,
+    slug: "yonban",
+    title: "四番の方どうぞ",
+    tier: "main",
+    scale: "未定",
+    format: "文章",
+    status: "継続",
+    debut: "",
+    synopsis: "",
+    peekNote: "",
+    driveLink: "",
+    meta: [],
+    timeSlot: "LUCID",
+    lunarPhase: "MEIYUE",
+    hourSlot: 31,
+    broadcastImage: "",
+    comment: "",
+  },
 
   // 32時 × XIAXIAN
   {

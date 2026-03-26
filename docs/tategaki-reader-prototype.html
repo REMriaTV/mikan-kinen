@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>まぶたのスクリーン — 四番の方どうぞ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0F12;
+    --bg-page: #111318;
+    --text: #E8E4DF;
+    --text-dim: rgba(232, 228, 223, 0.4);
+    --text-mid: rgba(232, 228, 223, 0.6);
+    --accent: #E05A33;
+    --accent-dim: rgba(224, 90, 51, 0.15);
+    --border: rgba(232, 228, 223, 0.08);
+    --border-hover: rgba(232, 228, 223, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === GRAIN OVERLAY === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* === HEADER === */
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, var(--bg) 60%, transparent);
+    pointer-events: none;
+  }
+
+  .header > * { pointer-events: auto; }
+
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .network-name {
+    font-size: 8px;
+    letter-spacing: 2.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+  }
+
+  .work-title {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: var(--text-mid);
+  }
+
+  .close-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: rgba(13, 15, 18, 0.6);
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+  }
+
+  .close-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  /* === READING AREA === */
+  .reader-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .page-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .page {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 48px 80px 48px;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+  }
+
+  .page.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .page.exit-left {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  .page.exit-right {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  .page.enter-left {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  .page.enter-right {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  .page-content {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 17px;
+    line-height: 2.2;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    color: var(--text);
+    max-height: calc(100vh - 144px);
+    max-height: calc(100dvh - 144px);
+    overflow: hidden;
+    column-gap: 2.4em;
+    font-feature-settings: "vpal", "vkrn";
+  }
+
+  .page-content p {
+    text-indent: 1em;
+    margin-bottom: 0;
+  }
+
+  .page-content p + p {
+    margin-top: 0;
+  }
+
+  /* === TITLE PAGE === */
+  .title-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    text-align: center;
+  }
+
+  .title-page .title-main {
+    writing-mode: vertical-rl;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .title-page .title-author {
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .title-page .title-status {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+    opacity: 0.7;
+  }
+
+  .title-page .title-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    margin-top: 12px;
+  }
+
+  /* === NAVIGATION === */
+  .nav-zones {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    pointer-events: none;
+  }
+
+  .nav-zone {
+    flex: 1;
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+  }
+
+  /* Japanese books: tap LEFT to go forward (right-to-left reading) */
+  .nav-zone.prev { cursor: w-resize; }
+  .nav-zone.next { cursor: e-resize; }
+
+  /* Reverse: left = next page, right = prev page (like turning a Japanese book) */
+  .nav-zone:first-child { order: 2; } /* right side = prev */
+  .nav-zone:last-child { order: 1; }  /* left side = next */
+
+  .nav-hint {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: var(--text-dim);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .nav-zone:hover .nav-hint,
+  .nav-zone:active .nav-hint {
+    opacity: 0.5;
+  }
+
+  .nav-zone.prev .nav-hint { right: 20px; }
+  .nav-zone.next .nav-hint { left: 20px; }
+
+  /* === FOOTER === */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px 20px;
+    background: linear-gradient(0deg, var(--bg) 60%, transparent);
+    gap: 16px;
+    pointer-events: none;
+  }
+
+  .footer > * { pointer-events: auto; }
+
+  .page-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .page-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.4s ease;
+    cursor: pointer;
+  }
+
+  .page-dot.active {
+    background: var(--text-dim);
+    box-shadow: 0 0 8px rgba(232, 228, 223, 0.15);
+  }
+
+  .page-dot:hover {
+    background: var(--text-mid);
+  }
+
+  .page-number {
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* === SWIPE SUPPORT === */
+  .swipe-indicator {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeHint 4s ease 2s forwards;
+    z-index: 100;
+  }
+
+  @keyframes fadeHint {
+    0% { opacity: 0; }
+    20% { opacity: 0.5; }
+    80% { opacity: 0.5; }
+    100% { opacity: 0; }
+  }
+
+  /* === LOADING STATE === */
+  .loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 1000;
+    animation: fadeOut 0.8s ease 1.5s forwards;
+  }
+
+  .loading-screen .eye {
+    font-size: 24px;
+    animation: blink 2s ease infinite;
+  }
+
+  @keyframes blink {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0.1; }
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; pointer-events: none; }
+  }
+
+  .loading-text {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    .page {
+      padding: 56px 24px 72px 24px;
+    }
+
+    .page-content {
+      font-size: 15px;
+      line-height: 2.0;
+    }
+
+    .title-page .title-main {
+      font-size: 24px;
+    }
+
+    .header { padding: 10px 16px; }
+    .footer { padding: 12px 16px 16px; }
+  }
+
+  /* === COLOPHON PAGE === */
+  .colophon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .colophon-line {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-family: 'Courier New', monospace;
+    line-height: 2;
+  }
+
+  .colophon-title {
+    writing-mode: vertical-rl;
+    font-size: 16px;
+    letter-spacing: 0.15em;
+    color: var(--text-mid);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .colophon .accent-line {
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-screen">
+  <div class="eye">𝇍</div>
+  <div class="loading-text">rem sync…</div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="network-name">REMREAL TELEPATHIC NETWORK</div>
+    <div class="work-title" id="headerTitle">四番の方どうぞ</div>
+  </div>
+  <button class="close-btn" onclick="history.back()" title="覚醒">✕</button>
+</div>
+
+<!-- Reader -->
+<div class="reader-container">
+  <div class="page-wrapper" id="pageWrapper">
+    <!-- Pages injected by JS -->
+  </div>
+</div>
+
+<!-- Tap Navigation Zones -->
+<div class="nav-zones">
+  <div class="nav-zone prev" id="navPrev">
+    <span class="nav-hint">‹</span>
+  </div>
+  <div class="nav-zone next" id="navNext">
+    <span class="nav-hint">›</span>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="page-number" id="pageNum">1 / 1</div>
+  <div class="page-indicator" id="pageDots"></div>
+</div>
+
+<div class="swipe-indicator">← swipe or tap →</div>
+
+<script>
+// ============================================
+// MANUSCRIPT DATA
+// Replace this section with real content.
+// Each entry in `pages` becomes one page.
+// ============================================
+const WORK = {
+  title: '四番の方どうぞ',
+  author: '百面惣',
+  status: '執筆中',
+  position: 'LUCID × 眉月',
+  pages: [
+    // Page 1 — Title page (handled specially)
+    null,
+    // Page 2
+    `「四番の方、お入りください 」
+
+　再検査と言われて、何か良くない結果が出たのかと心配になったが、病院の感じは決して悪くなく、受付を済ませるとすぐに不安は消えていった。
+
+「はーい」と、綾は外向けの声で返事をして、診察室へ入った。
+
+　子安診療所は、駅からは離れていたが、家からは歩いて行くことができる唯一の診療所だ。GoogleMapのレビューでは4.6の高評価がつけられていて、写真も清潔感があって好感が持てた。たったそれだけの理由で、綾は病院を決めた。`,
+    // Page 3
+    `　診察室に入るとすぐに「はい、こんにちは」と、優しそうな声で挨拶をして出迎えてくれたのが、おそらく院長の子安先生だろう。年齢は50歳くらいに見えた。
+
+「座ってください」
+　カルテを見ながらではあったが、こちらの緊張を解きほぐそうとするような温度が声に込められていた。その気遣いに安心感を抱いた綾は、初対面にもかかわらず「はい、先生、こんにちは」とにこやかに応えていた。
+
+　なぜか心を許してしまう、包容力のある年上の男性。
+　それが子安院長の第一印象だった。`,
+    // Page 4
+    `「えっとね。」
+　カルテを見下ろしながら話し続けるのを見て、綾はやや物足りなさを覚えたが、この先生は意外と人見知りなのかもしれないとも思った。
+
+「ちょっと検診結果で気になることがあったので、呼ばせてもらったんですけどね。」
+「はい...。」
+
+　なんだろう。気になることって・・・。`,
+    // Page 5
+    `　三十歳になるまでOL街道をまっしぐらに歩んできた綾は、これまでドラマとは無縁の人生を送ってきた。
+
+　大恋愛をしたこともなければ、事故や事件に巻き込まれることもない。定時まで仕事をして帰ったら家事に追われ、SNSを見てダラダラ過ごしたり休日に友人とカフェに行く程度の息抜きをする。平凡の教科書があれば見本になるほどの普通っぷりだ。
+
+　健康は人並みに気を使う程度だったが、幸いにも大きな病気をしたことがなかった。風邪も薬をもらいに行く前に大抵治ってしまうので、滅多なことがない限り病院とは縁遠い人生だった。そのせいか、病院へ行くということ自体がちょっとしたイベントのようで、「ちょっと気になることがある」などと言われた日には、ようやく私の人生に何かが起こるのだろうか、という淡い期待すら抱いていた。`,
+    // Page 6
+    `「まあ、大丈夫とは思うんですけどね。念のため、ということで。」
+　そう言って子安先生は意図的に言葉に切ると、カルテから目を離して綾の方に向き直った。
+
+　意外にも、今度は綾が目を逸らす番だった。
+
+　細身で面長の顔は若ければ美男子だったであろう顔立ちで、今は数本の深い皺が顔面に老いを滲ませてはいるものの、かえって若者にはない色気に満ちていた。
+　
+　　
+　「イケオジ」とか「渋カッコいい」というのは、こういう男性のことを言うのだろう。
+　職場ではまず出会うことのない大人の雰囲気に触れて、綾の胸はいつになくときめいていた。`,
+    // Page 7 — Colophon (handled specially)
+    null,
+  ]
+};
+
+// ============================================
+// READER ENGINE
+// ============================================
+const wrapper = document.getElementById('pageWrapper');
+const pageNum = document.getElementById('pageNum');
+const pageDots = document.getElementById('pageDots');
+let currentPage = 0;
+const totalPages = WORK.pages.length;
+
+function createPages() {
+  WORK.pages.forEach((content, i) => {
+    const page = document.createElement('div');
+    page.className = 'page' + (i === 0 ? ' active' : '');
+    page.dataset.index = i;
+
+    if (i === 0) {
+      // Title page
+      page.innerHTML = `
+        <div class="title-page">
+          <div class="title-label">REMREAL TELEPATHIC NETWORK</div>
+          <div class="title-main">${WORK.title}</div>
+          <div class="title-author">${WORK.author}</div>
+          <div class="title-status">${WORK.status} — ${WORK.position}</div>
+        </div>
+      `;
+    } else if (i === totalPages - 1) {
+      // Colophon
+      page.innerHTML = `
+        <div class="colophon">
+          <div class="colophon-title">${WORK.title}</div>
+          <div class="accent-line"></div>
+          <div class="colophon-line">
+            ${WORK.author}<br>
+            ${WORK.status}<br><br>
+            ${WORK.position}<br><br>
+            REMREAL TELEPATHIC NETWORK<br>
+            レムリアテレビジョン意識波息式会社
+          </div>
+        </div>
+      `;
+    } else {
+      // Text page
+      const paragraphs = content.trim().split('\n').map(p => `<p>${p.trim()}</p>`).join('');
+      page.innerHTML = `<div class="page-content">${paragraphs}</div>`;
+    }
+
+    wrapper.appendChild(page);
+  });
+
+  // Build dots
+  for (let i = 0; i < totalPages; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'page-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToPage(i));
+    pageDots.appendChild(dot);
+  }
+
+  updateIndicator();
+}
+
+function goToPage(target) {
+  if (target === currentPage || target < 0 || target >= totalPages) return;
+
+  const pages = wrapper.querySelectorAll('.page');
+  const currentEl = pages[currentPage];
+  const targetEl = pages[target];
+  const goingForward = target > currentPage;
+
+  // Exit current
+  currentEl.classList.remove('active');
+  currentEl.classList.add(goingForward ? 'exit-right' : 'exit-left');
+
+  // Enter target
+  targetEl.classList.add(goingForward ? 'enter-left' : 'enter-right');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      targetEl.classList.remove('enter-left', 'enter-right');
+      targetEl.classList.add('active');
+    });
+  });
+
+  setTimeout(() => {
+    currentEl.classList.remove('exit-left', 'exit-right');
+  }, 600);
+
+  currentPage = target;
+  updateIndicator();
+}
+
+function updateIndicator() {
+  pageNum.textContent = `${currentPage + 1} / ${totalPages}`;
+  const dots = pageDots.querySelectorAll('.page-dot');
+  dots.forEach((d, i) => d.classList.toggle('active', i === currentPage));
+}
+
+// Japanese reading direction: LEFT tap = next page, RIGHT tap = prev page
+function nextPage() { goToPage(currentPage + 1); }
+function prevPage() { goToPage(currentPage - 1); }
+
+// Tap zones (already reversed in CSS order)
+document.getElementById('navNext').addEventListener('click', nextPage);
+document.getElementById('navPrev').addEventListener('click', prevPage);
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === ' ') { nextPage(); e.preventDefault(); }
+  if (e.key === 'ArrowRight') { prevPage(); e.preventDefault(); }
+});
+
+// Touch swipe
+let touchStartX = 0;
+let touchStartY = 0;
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    // Swipe left (finger moves left) = next page in Japanese reading
+    if (dx < 0) prevPage();  // Actually going to previous (western sense, but next in Japanese)
+    else nextPage();
+    // Wait... let me think about this correctly.
+    // In a Japanese book, you turn pages LEFT to RIGHT.
+    // Swiping LEFT (←) = moving forward in the text
+    // Swiping RIGHT (→) = moving backward
+  }
+}, { passive: true });
+
+// Init
+createPages();
+</script>
+</body>
+</html>

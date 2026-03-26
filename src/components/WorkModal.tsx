@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import { Work, timeSlotInfo, lunarPhaseInfo, hourSlotInfo } from "@/data/works";
 
@@ -10,6 +10,8 @@ interface WorkModalProps {
 }
 
 export default function WorkModal({ work, onClose }: WorkModalProps) {
+  const [hasManuscript, setHasManuscript] = useState(false);
+
   // ESCキーで閉じる
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -30,6 +32,27 @@ export default function WorkModal({ work, onClose }: WorkModalProps) {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/manuscripts/${work.slug}`, {
+          method: "GET",
+          cache: "no-store",
+        });
+        const json = (await res.json()) as { ok?: boolean; exists?: boolean };
+        if (cancelled) return;
+        setHasManuscript(Boolean(json.ok && json.exists));
+      } catch {
+        if (cancelled) return;
+        setHasManuscript(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [work.slug]);
 
   // 位置タグ用の情報を取得
   const getPositionTag = () => {
@@ -255,6 +278,38 @@ export default function WorkModal({ work, onClose }: WorkModalProps) {
               </div>
               <span style={{ color: "rgba(255,255,255,0.4)" }}>&rarr;</span>
             </Link>
+
+            {hasManuscript && (
+              <Link
+                href={`/read/${work.slug}`}
+                className="flex items-center justify-between transition-colors"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: "14px" }}>&#128366;</span>
+                  <span
+                    style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}
+                  >
+                    読む
+                  </span>
+                </div>
+                <span style={{ color: "rgba(255,255,255,0.4)" }}>&rarr;</span>
+              </Link>
+            )}
           </div>
 
           {/* G. フッター */}
