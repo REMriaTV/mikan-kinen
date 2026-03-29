@@ -619,7 +619,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
             </div>
           )}
           <p className="text-[0.75rem] text-[rgba(255,255,255,0.55)]">
-            空欄のまま入室すると、夢氏名がランダムに付きます（重ならないよう末尾に短い識別が付きます）。
+            空欄のまま入室すると、夢氏名がランダムに付きます。
           </p>
           <button
             type="button"
