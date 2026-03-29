@@ -54,6 +54,18 @@ function getRandomDreamName() {
   ];
 }
 
+/** 無記名入室時: 候補から1つ選び、末尾に一意IDを付けて他ユーザーと名前・色が被らないようにする */
+function makeUniqueDreamName(): string {
+  const base = getRandomDreamName();
+  let suffix: string;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    suffix = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+  } else {
+    suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`.slice(0, 12);
+  }
+  return `${base}·${suffix}`;
+}
+
 // ユーザー名から安定した色を割り当て（チャット色分け用）
 const USER_COLORS = [
   "rgba(224,90,51,0.85)",
@@ -299,7 +311,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
         return;
       }
     }
-    const name = displayName.trim() || getRandomDreamName();
+    const name = displayName.trim() || makeUniqueDreamName();
     try {
       await daily.join({
         url: GARAGE_ROOM_URL,
@@ -562,7 +574,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
             </div>
           )}
           <p className="text-[0.75rem] text-[rgba(255,255,255,0.55)]">
-            空欄のまま入室すると、「夢の中の通りすがりA」などの夢氏名がレムリア側でそっと選ばれます。
+            空欄のまま入室すると、夢氏名がランダムに付きます（重ならないよう末尾に短い識別が付きます）。
           </p>
           <button
             type="button"
