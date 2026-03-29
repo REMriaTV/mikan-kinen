@@ -43,6 +43,7 @@ const COPY = {
 } as const;
 
 const DREAM_NAME_CANDIDATES = [
+  "夢の中の通りすがりA",
   "夢の中の通りすがりB",
   "あっちの世界の一般人",
   "寝ても覚めても寝不足",
