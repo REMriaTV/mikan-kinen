@@ -30,6 +30,14 @@ const COPY = {
   SHARE_HINT_BEFORE: "映写する内容（画面/ウィンドウ/タブ）を選びます。",
   SHARE_HINT_ACTIVE: "映写中です。ロゴを押すと瞼の裏側が開きます。",
   SHARE_HINT_CANCELED: "映写は開始されませんでした（キャンセル）。",
+  SHARE_HINT_MIC_CONFLICT:
+    "映写とマイクを同時に使えない場合があります。先にREM（マイクON）にしてから映写するか、ブラウザの許可を確認してください。",
+  JOIN_NOTICE: "また一人、眠りに落ちました",
+  LABEL_PASSPHRASE: "合言葉",
+  PLACEHOLDER_PASSPHRASE: "会の合言葉を入力",
+  BTN_EXPORT: "ログをコピー",
+  ARCHIVE_NOTE:
+    "動画の保存は OBS・QuickTime・Daily のクラウド録画など外部ツールで行えます。テキストは「ログをコピー」で残せます。",
 } as const;
 
 const DREAM_NAME_CANDIDATES = [
@@ -75,7 +83,26 @@ type ChatMessage = {
   from: string;
   text: string;
   timestamp: number;
+  system?: boolean;
 };
+
+const PASS_OK_KEY = "garage-v2-pass-ok";
+
+function mapRowToChatMessage(row: {
+  id: string;
+  from_name: string;
+  body: string;
+  is_system: boolean;
+  created_at: string;
+}): ChatMessage {
+  return {
+    id: row.id,
+    from: row.from_name,
+    text: row.body,
+    timestamp: new Date(row.created_at).getTime(),
+    system: row.is_system,
+  };
+}
 
 /** 画面共有用 video 要素 */
 function ScreenShareVideo({
@@ -134,6 +161,13 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
   const [shareHint, setShareHint] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [passphraseRequired, setPassphraseRequired] = useState(false);
+  const [passphraseOk, setPassphraseOk] = useState(false);
+  const [passphraseInput, setPassphraseInput] = useState("");
+  const [passphraseError, setPassphraseError] = useState<string | null>(null);
+  const [garageConfigReady, setGarageConfigReady] = useState(false);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
+  const announcedJoinIdsRef = useRef<Set<string>>(new Set());
 
   const canLocalScreenShare =
     typeof window !== "undefined" &&
@@ -143,6 +177,30 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     () => resolvedName || displayName || "（未設定）",
     [resolvedName, displayName]
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/garage-v2/config");
+        const j = (await r.json()) as { passphraseRequired?: boolean };
+        if (cancelled) return;
+        const req = j.passphraseRequired === true;
+        setPassphraseRequired(req);
+        if (!req) setPassphraseOk(true);
+        else if (typeof window !== "undefined" && sessionStorage.getItem(PASS_OK_KEY) === "1") {
+          setPassphraseOk(true);
+        }
+      } catch {
+        if (!cancelled) setPassphraseOk(true);
+      } finally {
+        if (!cancelled) setGarageConfigReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useDailyEvent(
     "joined-meeting",
@@ -161,23 +219,52 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
       setResolvedName(null);
       setChatInput("");
       setChatMessages([]);
+      seenMessageIdsRef.current.clear();
+      announcedJoinIdsRef.current.clear();
+    }, [])
+  );
+
+  useDailyEvent(
+    "participant-joined",
+    useCallback((ev) => {
+      const p = ev?.participant;
+      if (!p || p.local === true) return;
+      const pid = String(p.user_id ?? "");
+      if (!pid || announcedJoinIdsRef.current.has(pid)) return;
+      announcedJoinIdsRef.current.add(pid);
+      const un = p.user_name;
+      const label = typeof un === "string" && un.trim() ? un.trim() : "guest";
+      const id = `join-${pid}-${Date.now()}`;
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id,
+          from: "REM",
+          text: `${COPY.JOIN_NOTICE}（${label}）`,
+          timestamp: Date.now(),
+          system: true,
+        },
+      ]);
     }, [])
   );
 
   useDailyEvent(
     "app-message",
-    useCallback((ev: any) => {
-      if (!ev?.data || typeof ev.data.text !== "string") return;
+    useCallback((ev: { data?: { id?: string; text?: string; fromName?: string } }) => {
+      const d = ev?.data;
+      if (!d || typeof d.text !== "string") return;
+      const bodyText: string = d.text;
+      const mid = typeof d.id === "string" && d.id ? d.id : null;
+      if (mid && seenMessageIdsRef.current.has(mid)) return;
+      if (mid) seenMessageIdsRef.current.add(mid);
       const from =
-        typeof ev?.data?.fromName === "string" && ev.data.fromName.trim()
-          ? ev.data.fromName.trim()
-          : "guest";
+        typeof d?.fromName === "string" && d.fromName.trim() ? d.fromName.trim() : "guest";
       setChatMessages((prev) => [
         ...prev,
         {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          id: mid ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
           from,
-          text: ev.data.text,
+          text: bodyText,
           timestamp: Date.now(),
         },
       ]);
@@ -186,6 +273,30 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
 
   const handleJoin = async () => {
     if (!daily || hasJoined) return;
+    if (passphraseRequired && !passphraseOk) {
+      if (!passphraseInput.trim()) {
+        setPassphraseError("合言葉を入力してください");
+        return;
+      }
+      setPassphraseError(null);
+      try {
+        const r = await fetch("/api/garage-v2/verify-passphrase", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ passphrase: passphraseInput.trim() }),
+        });
+        const j = (await r.json()) as { ok?: boolean };
+        if (!j.ok) {
+          setPassphraseError("合言葉が違います");
+          return;
+        }
+        if (typeof window !== "undefined") sessionStorage.setItem(PASS_OK_KEY, "1");
+        setPassphraseOk(true);
+      } catch {
+        setPassphraseError("確認に失敗しました");
+        return;
+      }
+    }
     const name = displayName.trim() || getRandomDreamName();
     try {
       await daily.join({
@@ -197,6 +308,27 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
       setHasJoined(true);
       setResolvedName(name);
       setIsAudioOn(false);
+      try {
+        const r = await fetch("/api/garage-chat?limit=200");
+        const j = (await r.json()) as {
+          messages?: Array<{
+            id: string;
+            from_name: string;
+            body: string;
+            is_system: boolean;
+            created_at: string;
+          }>;
+        };
+        if (j.messages?.length) {
+          seenMessageIdsRef.current.clear();
+          for (const m of j.messages) {
+            seenMessageIdsRef.current.add(m.id);
+          }
+          setChatMessages(j.messages.map(mapRowToChatMessage));
+        }
+      } catch {
+        /* 履歴が取れなくても入室は続行 */
+      }
     } catch {
       // join 失敗時は何もしない
     }
@@ -207,17 +339,37 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     const text = chatInput.trim() || COPY.SEND_BUTTON;
     setChatInput("");
     if (textareaRef.current) textareaRef.current.value = "";
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        from: myDreamName,
-        text,
-        timestamp: Date.now(),
-      },
-    ]);
+
+    let serverId: string | undefined;
     try {
-      daily.sendAppMessage({ text, fromName: myDreamName }, "*");
+      const r = await fetch("/api/garage-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromName: myDreamName, body: text, isSystem: false }),
+      });
+      const j = (await r.json()) as { message?: { id?: string } };
+      if (j.message?.id) serverId = j.message.id;
+    } catch {
+      /* 保存失敗時もチャットは飛ばす */
+    }
+    if (serverId) seenMessageIdsRef.current.add(serverId);
+    const localId = serverId ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const outText: string = text;
+    setChatMessages((prev) => {
+      if (serverId && prev.some((m) => m.id === serverId)) return prev;
+      const row: ChatMessage = {
+        id: localId,
+        from: myDreamName,
+        text: outText,
+        timestamp: Date.now(),
+      };
+      return [...prev, row];
+    });
+    try {
+      await daily.sendAppMessage(
+        { id: serverId, text: outText, fromName: myDreamName },
+        "*"
+      );
     } catch {
       // 送信失敗は握りつぶす
     }
@@ -241,18 +393,35 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     setResolvedName(null);
     setChatInput("");
     setChatMessages([]);
+    seenMessageIdsRef.current.clear();
+    announcedJoinIdsRef.current.clear();
   };
 
   const handleToggleMute = () => {
     if (!daily) return;
     const next = !daily.localAudio();
     if (next) {
-      daily.setLocalAudio(true);
+      try {
+        daily.setLocalAudio(true);
+        setIsAudioOn(true);
+        if (isSharingScreen) {
+          window.setTimeout(() => {
+            try {
+              daily.setLocalAudio(true);
+            } catch {
+              setShareHint(COPY.SHARE_HINT_MIC_CONFLICT);
+            }
+          }, 400);
+        }
+      } catch {
+        setShareHint(COPY.SHARE_HINT_MIC_CONFLICT);
+        setIsAudioOn(false);
+      }
     } else {
       // iOSのマイク使用インジケータを確実に消すため、トラックを破棄する
-      daily.setLocalAudio(false, { forceDiscardTrack: true } as any);
+      daily.setLocalAudio(false, { forceDiscardTrack: true } as { forceDiscardTrack: boolean });
+      setIsAudioOn(false);
     }
-    setIsAudioOn(next);
   };
 
   const handleToggleShare = async () => {
@@ -267,10 +436,32 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
         }
         setShareHint(COPY.SHARE_HINT_BEFORE);
         await startScreenShare();
+        if (isAudioOn) {
+          window.setTimeout(() => {
+            try {
+              daily.setLocalAudio(true);
+            } catch {
+              setShareHint(COPY.SHARE_HINT_MIC_CONFLICT);
+            }
+          }, 400);
+        }
       }
     } catch {
       // 映写の開始/終了失敗時は握りつぶす
       setShareHint(COPY.SHARE_HINT_CANCELED);
+    }
+  };
+
+  const handleExportLog = () => {
+    const lines = [...chatMessages]
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map((m) => `[${m.from}] ${m.text}`);
+    const blob = lines.join("\n");
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(blob).then(
+        () => setShareHint("ログをコピーしました"),
+        () => setShareHint("コピーに失敗しました")
+      );
     }
   };
 
@@ -328,15 +519,35 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
             placeholder="例）百面惣、名もなき夢人 など"
             className="w-full bg-[rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.2)] rounded-md px-3 py-2 text-[0.9rem] text-secondary outline-none focus:border-gold"
           />
+          {passphraseRequired && !passphraseOk && (
+            <div className="w-full space-y-1 text-left">
+              <label className="block text-[0.75rem] text-[rgba(255,255,255,0.65)]">{COPY.LABEL_PASSPHRASE}</label>
+              <input
+                type="password"
+                autoComplete="off"
+                value={passphraseInput}
+                onChange={(e) => {
+                  setPassphraseInput(e.target.value);
+                  setPassphraseError(null);
+                }}
+                placeholder={COPY.PLACEHOLDER_PASSPHRASE}
+                className="w-full bg-[rgba(0,0,0,0.5)] border border-[rgba(255,255,255,0.2)] rounded-md px-3 py-2 text-[0.9rem] text-secondary outline-none focus:border-gold"
+              />
+              {passphraseError && (
+                <p className="text-[0.72rem] text-[rgba(224,90,51,0.9)]">{passphraseError}</p>
+              )}
+            </div>
+          )}
           <p className="text-[0.75rem] text-[rgba(255,255,255,0.55)]">
             空欄のまま入室すると、「夢の中の通りすがりA」などの夢氏名がレムリア側でそっと選ばれます。
           </p>
           <button
             type="button"
             onClick={handleJoin}
-            className="w-full mt-2 px-4 py-2 text-[0.85rem] tracking-[0.18em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors"
+            disabled={!garageConfigReady}
+            className="w-full mt-2 px-4 py-2 text-[0.85rem] tracking-[0.18em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors disabled:opacity-40 disabled:pointer-events-none"
           >
-            瞳を閉じる
+            {garageConfigReady ? "瞳を閉じる" : "準備中…"}
           </button>
           <div className="pt-1">
             <Link
@@ -382,11 +593,18 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
               {COPY.PAGE_TITLE}
             </h1>
           </button>
-          <div className="sm:min-w-[140px] flex items-center gap-1.5 md:gap-2 justify-end">
+          <div className="sm:min-w-[140px] flex items-center gap-1.5 md:gap-2 justify-end flex-wrap">
+            <button
+              type="button"
+              onClick={handleExportLog}
+              className="inline-flex px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.06)] text-[0.65rem] text-[rgba(255,255,255,0.75)]"
+            >
+              {COPY.BTN_EXPORT}
+            </button>
             <button
               type="button"
               onClick={handleToggleMute}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem]"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)] text-[0.7rem]"
             >
               <span
                 className={
@@ -429,21 +647,24 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
         </div>
 
         {/* 情報バー：D.N. と参加者・ステータス（ヘッダー内に統合） */}
-        <div className="flex items-center justify-between gap-3 px-4 pb-2 text-[0.68rem] text-[rgba(255,255,255,0.6)]">
-          <span>
-            {COPY.LABEL_DN}
-            <span className="text-secondary ml-1">{myDreamName}</span>
-          </span>
-          <span>参加者: {participantIds.length}</span>
-          <span
-            className={
-              joined
-                ? "text-amber-400/90 font-medium animate-pulse"
-                : "text-[rgba(255,255,255,0.45)]"
-            }
-          >
-            {joined ? COPY.STATUS_SYNC : COPY.STATUS_ASYNC}
-          </span>
+        <div className="flex flex-col gap-1 px-4 pb-2">
+          <div className="flex items-center justify-between gap-3 text-[0.68rem] text-[rgba(255,255,255,0.6)]">
+            <span>
+              {COPY.LABEL_DN}
+              <span className="text-secondary ml-1">{myDreamName}</span>
+            </span>
+            <span>参加者: {participantIds.length}</span>
+            <span
+              className={
+                joined
+                  ? "text-amber-400/90 font-medium animate-pulse"
+                  : "text-[rgba(255,255,255,0.45)]"
+              }
+            >
+              {joined ? COPY.STATUS_SYNC : COPY.STATUS_ASYNC}
+            </span>
+          </div>
+          <p className="text-[0.62rem] leading-snug text-[rgba(255,255,255,0.38)]">{COPY.ARCHIVE_NOTE}</p>
         </div>
       </header>
 
@@ -456,6 +677,13 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
         )}
         <div className="space-y-2 text-[0.85rem]">
           {[...chatMessages].reverse().map((msg) => {
+            if (msg.system) {
+              return (
+                <div key={msg.id} className="text-center text-[0.72rem] text-[rgba(255,255,255,0.45)] italic py-1">
+                  {msg.text}
+                </div>
+              );
+            }
             const name = displayNameFor(msg.from);
             const color = getUserColor(name);
             const bubbleBg = withAlpha(color, 0.12);
@@ -478,6 +706,36 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
           })}
         </div>
       </div>
+
+      {/* モバイル：寝言マイク（REM / ROM）を右下に固定 */}
+      <button
+        type="button"
+        onClick={handleToggleMute}
+        className="md:hidden fixed z-[45] flex flex-col items-center justify-center gap-1 rounded-full border-2 border-[rgba(255,255,255,0.35)] bg-[rgba(13,15,18,0.92)] px-4 py-3 shadow-lg touch-manipulation"
+        style={{
+          right: "max(1rem, env(safe-area-inset-right))",
+          bottom: "calc(5.75rem + env(safe-area-inset-bottom))",
+        }}
+        aria-label={isAudioOn ? "REM（マイクオン）" : "ROM（マイクオフ）"}
+      >
+        <span
+          className={
+            "flex h-8 w-8 items-center justify-center rounded-full border " +
+            (isAudioOn
+              ? "border-[rgba(224,90,51,0.95)] bg-[rgba(224,90,51,0.2)]"
+              : "border-[rgba(255,255,255,0.45)] bg-[rgba(0,0,0,0.5)]")
+          }
+        >
+          {isAudioOn ? (
+            <span className="h-2 w-2 rounded-full bg-[rgba(255,255,255,0.95)]" />
+          ) : (
+            <span className="h-[2px] w-5 bg-[rgba(255,255,255,0.75)] rotate-[-20deg]" />
+          )}
+        </span>
+        <span className="text-[0.65rem] font-medium tracking-[0.12em] text-[rgba(255,255,255,0.9)]">
+          {isAudioOn ? COPY.BTN_MUTE_ON : COPY.BTN_MUTE_OFF}
+        </span>
+      </button>
 
       {/* 入力エリア（フッター固定） */}
       <div
