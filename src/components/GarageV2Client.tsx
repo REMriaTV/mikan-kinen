@@ -35,9 +35,11 @@ const COPY = {
   JOIN_NOTICE: "また一人、眠りに落ちました",
   LABEL_PASSPHRASE: "合言葉",
   PLACEHOLDER_PASSPHRASE: "会の合言葉を入力",
-  BTN_EXPORT: "ログをコピー",
-  ARCHIVE_NOTE:
-    "動画の保存は OBS・QuickTime・Daily のクラウド録画など外部ツールで行えます。テキストは「ログをコピー」で残せます。",
+  BTN_EXPORT: "寝言を遺す",
+  ARCHIVE_NOTE: "テキストは「寝言を遺す」で保存できます。",
+  EXPORT_SUCCESS: "寝言をコピーしました。あなたの夢日記に貼り付けることができます。",
+  EXPORT_FILE_ONLY:
+    "テキストファイルを保存しました。夢日記に貼るときは、保存したファイルを開いてコピーしてください。",
 } as const;
 
 const DREAM_NAME_CANDIDATES = [
@@ -456,12 +458,33 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     const lines = [...chatMessages]
       .sort((a, b) => a.timestamp - b.timestamp)
       .map((m) => `[${m.from}] ${m.text}`);
-    const blob = lines.join("\n");
+    const text = lines.join("\n");
+    const stamp = new Date();
+    const filename = `rem-chat-${stamp.getFullYear()}${String(stamp.getMonth() + 1).padStart(2, "0")}${String(stamp.getDate()).padStart(2, "0")}-${String(stamp.getHours()).padStart(2, "0")}${String(stamp.getMinutes()).padStart(2, "0")}.txt`;
+
+    try {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setShareHint("ファイルの保存に失敗しました");
+      return;
+    }
+
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(blob).then(
-        () => setShareHint("ログをコピーしました"),
-        () => setShareHint("コピーに失敗しました")
+      navigator.clipboard.writeText(text).then(
+        () => setShareHint(COPY.EXPORT_SUCCESS),
+        () => setShareHint(COPY.EXPORT_FILE_ONLY)
       );
+    } else {
+      setShareHint(COPY.EXPORT_FILE_ONLY);
     }
   };
 
@@ -476,7 +499,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
   // ヒントは短時間で消える（常時表示はしない）
   useEffect(() => {
     if (!shareHint) return;
-    const t = window.setTimeout(() => setShareHint(null), 2800);
+    const t = window.setTimeout(() => setShareHint(null), 5200);
     return () => window.clearTimeout(t);
   }, [shareHint]);
 
