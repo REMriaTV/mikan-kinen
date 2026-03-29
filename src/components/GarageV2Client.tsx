@@ -357,6 +357,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
       setHasJoined(true);
       setResolvedName(name);
       setIsAudioOn(false);
+      let historyRows: ChatMessage[] = [];
       try {
         const r = await fetch("/api/garage-chat?limit=200");
         const j = (await r.json()) as {
@@ -373,11 +374,20 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
           for (const m of j.messages) {
             seenMessageIdsRef.current.add(m.id);
           }
-          setChatMessages(j.messages.map(mapRowToChatMessage));
+          historyRows = j.messages.map(mapRowToChatMessage);
         }
       } catch {
         /* 履歴が取れなくても入室は続行 */
       }
+      const selfLabel = displayDreamName(name);
+      const selfJoinMsg: ChatMessage = {
+        id: `join-self-${Date.now()}`,
+        from: "REM",
+        text: `${COPY.JOIN_NOTICE}（${selfLabel}）`,
+        timestamp: Date.now(),
+        system: true,
+      };
+      setChatMessages([...historyRows, selfJoinMsg]);
     } catch {
       // join 失敗時は何もしない
     }
