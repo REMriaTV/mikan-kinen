@@ -27,6 +27,7 @@ function toProgramItems(input: ProgramItem[]): ProgramItem[] {
 export default function AdminBroadcastClient({ token }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [clearingChat, setClearingChat] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -237,6 +238,38 @@ export default function AdminBroadcastClient({ token }: Props) {
       setError(msg);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleClearGarageChat() {
+    if (
+      !window.confirm(
+        "REM Chat（garage-room）のサーバー上のテキストログをすべて削除します。取り消せません。よろしいですか？"
+      )
+    ) {
+      return;
+    }
+    setClearingChat(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/admin/garage-chat/clear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const json = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "クリアに失敗しました");
+      }
+      setSuccess(
+        "REM Chat のサーバーログをクリアしました。入室中の参加者はページを再読み込みすると空の状態からになります。"
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+    } finally {
+      setClearingChat(false);
     }
   }
 
@@ -475,6 +508,22 @@ export default function AdminBroadcastClient({ token }: Props) {
                     </div>
                   ))}
                 </div>
+              </section>
+
+              <section className="rounded border border-amber-900/50 p-5 bg-[rgba(180,80,40,0.06)]">
+                <h2 className="text-[1rem] font-semibold mb-2">REM Chat テキストログ</h2>
+                <p className="text-[0.85rem] opacity-80 mb-4 leading-relaxed">
+                  定期放送の前など、テスト投稿を残したくないときに、サーバーに保存されているチャット履歴をまとめて削除します（Supabase
+                  の garage-room のみ）。削除後は、新しく入室した人から空の履歴で始まります。
+                </p>
+                <button
+                  type="button"
+                  disabled={clearingChat}
+                  onClick={handleClearGarageChat}
+                  className="px-4 py-2 rounded border border-amber-600/80 text-amber-100 hover:bg-amber-950/40 disabled:opacity-50"
+                >
+                  {clearingChat ? "削除中…" : "サーバー上の REM Chat ログをすべて削除"}
+                </button>
               </section>
 
               <div className="flex items-center gap-3">
