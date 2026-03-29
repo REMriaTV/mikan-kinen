@@ -1,0 +1,535 @@
+/* 寝言帳 — プロトタイプ準拠 */
+
+.negoto-root {
+  font-family: var(--font-shippori), "Shippori Mincho", serif;
+  background: #0d0f12;
+  color: #e8e4df;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.negoto-video-header {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  min-height: 400px;
+  max-height: 560px;
+  overflow: hidden;
+}
+
+.negoto-video-header video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+}
+
+.negoto-video-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, transparent, #0d0f12);
+  pointer-events: none;
+}
+
+.negoto-video-fade-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 15%;
+  background: linear-gradient(to top, transparent, #0d0f12);
+  pointer-events: none;
+}
+
+.negoto-video-title {
+  position: absolute;
+  bottom: 3rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 2;
+}
+
+.negoto-video-title h1 {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+}
+
+.negoto-body-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.negoto-desc {
+  font-size: 13px;
+  line-height: 2.4;
+  color: rgba(232, 228, 223, 0.35);
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(232, 228, 223, 0.06);
+}
+
+.negoto-card {
+  display: block;
+  padding: 2rem 1.25rem;
+  margin: 0 -1.25rem;
+  border-bottom: 1px solid rgba(232, 228, 223, 0.06);
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    background 0.4s,
+    box-shadow 0.4s;
+  border-radius: 4px;
+}
+
+.negoto-card:first-of-type {
+  border-top: 1px solid rgba(232, 228, 223, 0.06);
+}
+
+.negoto-card:hover {
+  background: rgba(232, 228, 223, 0.055);
+  box-shadow: 0 0 60px rgba(232, 228, 223, 0.04);
+}
+
+.negoto-card:hover .negoto-card-title {
+  color: #e8e4df;
+}
+.negoto-card:hover .negoto-card-excerpt {
+  color: rgba(232, 228, 223, 0.65);
+}
+.negoto-card:hover .negoto-card-who {
+  opacity: 0.9;
+}
+.negoto-card:hover .negoto-card-date {
+  color: rgba(232, 228, 223, 0.4);
+}
+.negoto-card:hover .negoto-card-topic {
+  color: rgba(232, 228, 223, 0.35);
+}
+.negoto-card:hover .negoto-card-arrow {
+  color: #e05a33;
+  opacity: 0.7;
+  transform: translateY(-50%) translateX(6px);
+}
+
+.negoto-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.negoto-card-date {
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  color: rgba(232, 228, 223, 0.22);
+  letter-spacing: 0.05em;
+  transition: color 0.4s;
+}
+
+.negoto-card-who {
+  font-size: 11px;
+  color: #e05a33;
+  opacity: 0.55;
+  transition: opacity 0.4s;
+}
+
+.negoto-card-title {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin-bottom: 0.35rem;
+  color: rgba(232, 228, 223, 0.6);
+  transition: color 0.4s;
+}
+
+.negoto-card-topic {
+  font-size: 11px;
+  color: rgba(232, 228, 223, 0.15);
+  font-family: "Courier New", monospace;
+  margin-bottom: 0.7rem;
+  letter-spacing: 0.03em;
+  transition: color 0.4s;
+}
+
+.negoto-card-excerpt {
+  font-size: 13px;
+  line-height: 2.2;
+  color: rgba(232, 228, 223, 0.22);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.4s;
+}
+
+.negoto-card-arrow {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: rgba(232, 228, 223, 0.05);
+  transition: all 0.4s;
+}
+
+.negoto-zzz-sep {
+  text-align: center;
+  padding: 1.25rem 0;
+  font-size: 11px;
+  color: rgba(232, 228, 223, 0.05);
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.5em;
+}
+
+.negoto-page-footer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(232, 228, 223, 0.04);
+  text-align: center;
+}
+
+.negoto-page-footer p {
+  font-size: 10px;
+  font-family: "Courier New", monospace;
+  color: rgba(232, 228, 223, 0.07);
+  letter-spacing: 0.15em;
+  line-height: 2;
+}
+
+.negoto-fi {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: negoto-fu 0.8s ease forwards;
+}
+
+@keyframes negoto-fu {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.negoto-fi:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.negoto-fi:nth-child(2) {
+  animation-delay: 0.25s;
+}
+.negoto-fi:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.negoto-fi:nth-child(4) {
+  animation-delay: 0.55s;
+}
+.negoto-fi:nth-child(5) {
+  animation-delay: 0.7s;
+}
+.negoto-fi:nth-child(6) {
+  animation-delay: 0.85s;
+}
+
+/* Entry page */
+.negoto-water-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.negoto-water-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.22;
+  filter: saturate(0.42) brightness(0.88);
+}
+
+.negoto-water-fade-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, #0d0f12, transparent);
+  z-index: 1;
+}
+
+.negoto-water-fade-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20%;
+  background: linear-gradient(to top, #0d0f12, transparent);
+  z-index: 1;
+}
+
+.negoto-sand-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(190, 170, 130, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 60%, rgba(190, 170, 130, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 90%, rgba(190, 170, 130, 0.05) 0%, transparent 50%);
+}
+
+.negoto-sand-bg::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.25;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 256px;
+}
+
+.negoto-entry {
+  position: relative;
+  z-index: 2;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 6rem;
+}
+
+.negoto-back {
+  display: inline-block;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  color: rgba(232, 228, 223, 0.3);
+  letter-spacing: 0.05em;
+  margin-bottom: 3rem;
+  text-decoration: none;
+  transition: color 0.3s;
+  opacity: 0;
+  animation: negoto-fade-up 0.8s 0.2s ease forwards;
+}
+
+.negoto-back:hover {
+  color: rgba(232, 228, 223, 0.6);
+}
+
+.negoto-entry-header {
+  opacity: 0;
+  animation: negoto-fade-up 1s 0.5s ease forwards;
+}
+
+.negoto-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.negoto-entry-date {
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  color: rgba(232, 228, 223, 0.35);
+}
+
+.negoto-entry-who {
+  font-size: 11px;
+  color: #e05a33;
+  opacity: 0.7;
+}
+
+.negoto-entry-title {
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  color: rgba(232, 228, 223, 0.95);
+}
+
+.negoto-entry-topic {
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  color: rgba(232, 228, 223, 0.3);
+  letter-spacing: 0.03em;
+  margin-bottom: 1.5rem;
+}
+
+.negoto-scroll-arrow {
+  text-align: center;
+  padding: 1rem 0 2rem;
+  opacity: 0;
+  animation: negoto-fade-up 0.8s 1.5s ease forwards;
+  border-bottom: 1px solid rgba(232, 228, 223, 0.08);
+  margin-bottom: 2.5rem;
+  transition: opacity 0.6s;
+}
+
+.negoto-scroll-arrow svg {
+  animation: negoto-arrow-bounce 2s ease-in-out infinite;
+}
+
+@keyframes negoto-arrow-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 0.55;
+  }
+}
+
+.negoto-scroll-reveal {
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 1.4s ease,
+    transform 1.4s ease;
+}
+
+.negoto-scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.negoto-scroll-reveal h2 {
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 1.25rem;
+  color: rgba(232, 228, 223, 0.85);
+  position: relative;
+  padding-left: 1.1rem;
+}
+
+.negoto-scroll-reveal h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  width: 3px;
+  height: 1.1em;
+  background: #e05a33;
+  opacity: 0.4;
+  border-radius: 1px;
+}
+
+.negoto-scroll-reveal p {
+  font-size: 15px;
+  line-height: 2.4;
+  color: rgba(232, 228, 223, 0.75);
+  margin-bottom: 0;
+}
+
+.negoto-scroll-reveal.negoto-zzz-block {
+  margin-bottom: 2.5rem;
+}
+
+.negoto-zzz-block {
+  text-align: center;
+  padding: 2rem 0;
+  font-size: 11px;
+  color: rgba(232, 228, 223, 0.1);
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.5em;
+}
+
+.negoto-entry-footer {
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(232, 228, 223, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 1.4s ease,
+    transform 1.4s ease;
+}
+
+.negoto-entry-footer.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.negoto-entry-nav {
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  color: rgba(232, 228, 223, 0.2);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.negoto-entry-nav:hover {
+  color: rgba(232, 228, 223, 0.5);
+}
+
+.negoto-entry-sig {
+  text-align: right;
+  font-size: 10px;
+  color: rgba(232, 228, 223, 0.12);
+  font-family: "Courier New", monospace;
+  line-height: 2;
+  letter-spacing: 0.08em;
+}
+
+@keyframes negoto-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* /negoto コラムトップ：動画の準備完了（またはフォールバック）後に全体をフェードイン */
+.negoto-page {
+  opacity: 0;
+  transition: opacity 2.5s cubic-bezier(0.25, 0, 0.2, 1);
+}
+
+.negoto-page.ready {
+  opacity: 1;
+}
+
+.negoto-back-home-link {
+  display: inline-block;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.22em;
+  color: rgba(232, 228, 223, 0.4);
+  text-decoration: none;
+  border: none;
+  background: none;
+  padding: 0.35rem 0.5rem;
+  transition: color 0.45s ease;
+}
+
+.negoto-back-home-link:hover {
+  color: rgba(232, 228, 223, 0.78);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .negoto-page {
+    opacity: 1;
+    transition: none;
+  }
+}

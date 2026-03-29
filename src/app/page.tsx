@@ -114,9 +114,11 @@ export default async function Home() {
 
       <div className="divider divider-wide" />
 
-      {/* WORKS LINK */}
-      <section className="max-w-[680px] mx-auto text-center py-20 px-6">
-        <p className="text-[0.6rem] tracking-[0.5em] text-dim uppercase mb-2">Works</p>
+      {/* メイン：番組表 */}
+      <section className="max-w-[680px] mx-auto text-center px-6 pt-20 pb-10">
+        <p className="text-[0.6rem] tracking-[0.5em] text-dim uppercase mb-2">
+          Works
+        </p>
         <h2 className="font-shippori font-bold text-[clamp(1.3rem,3vw,1.8rem)] mb-6">
           44の未完作品たち
         </h2>
@@ -130,6 +132,30 @@ export default async function Home() {
         >
           ▶ 番組表を見る
         </Link>
+      </section>
+
+      {/* サブ：コラム（見出しサイズ・CTAを一段下げ、番組表の補助導線） */}
+      <section className="max-w-[560px] mx-auto px-6 pb-20">
+        <div className="border-t border-[rgba(255,255,255,0.08)] pt-12 text-center">
+          <p className="text-[0.55rem] tracking-[0.35em] text-dim uppercase mb-1 opacity-75">
+            Column
+          </p>
+          <p className="text-[0.68rem] text-dim mb-3 tracking-[0.06em]">
+            番組のほかに
+          </p>
+          <h2 className="font-shippori font-semibold text-[clamp(1.05rem,2.4vw,1.35rem)] mb-4 text-secondary">
+            レムの波打ち際より
+          </h2>
+          <p className="text-[0.8rem] text-dim leading-[1.9] mb-6 max-w-[26rem] mx-auto">
+            夢と現実の境界線で綴る、走り書きの備忘録です。
+          </p>
+          <Link
+            href="/negoto"
+            className="inline-block text-[0.72rem] tracking-[0.22em] text-gold/90 border border-gold/45 px-8 py-2.5 hover:bg-gold/8 hover:border-gold/70 transition-all"
+          >
+            コラムを読む →
+          </Link>
+        </div>
       </section>
 
       <div className="divider" />
