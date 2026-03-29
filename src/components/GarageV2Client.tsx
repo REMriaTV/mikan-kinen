@@ -90,6 +90,16 @@ function makeUniqueDreamName(): string {
   return `${base}·${suffix}`;
 }
 
+/** 内部ID（·サフィックス）は Daily / 色分け用に保持し、UI には出さない */
+function displayDreamName(full: string): string {
+  if (!full || typeof full !== "string") return full;
+  const hex10 = full.match(/^(.*)·[0-9a-f]{10}$/i);
+  if (hex10?.[1]) return hex10[1];
+  const alnum = full.match(/^(.*)·[a-z0-9]{10,12}$/i);
+  if (alnum?.[1]) return alnum[1];
+  return full;
+}
+
 // ユーザー名から安定した色を割り当て（チャット色分け用）
 const USER_COLORS = [
   "rgba(224,90,51,0.85)",
@@ -271,7 +281,8 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
       if (!pid || announcedJoinIdsRef.current.has(pid)) return;
       announcedJoinIdsRef.current.add(pid);
       const un = p.user_name;
-      const label = typeof un === "string" && un.trim() ? un.trim() : "guest";
+      const raw = typeof un === "string" && un.trim() ? un.trim() : "guest";
+      const label = displayDreamName(raw);
       const id = `join-${pid}-${Date.now()}`;
       setChatMessages((prev) => [
         ...prev,
@@ -493,7 +504,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
   const handleExportLog = () => {
     const lines = [...chatMessages]
       .sort((a, b) => a.timestamp - b.timestamp)
-      .map((m) => `[${m.from}] ${m.text}`);
+      .map((m) => `[${displayDreamName(m.from)}] ${m.text}`);
     const text = lines.join("\n");
     const stamp = new Date();
     const filename = `rem-chat-${stamp.getFullYear()}${String(stamp.getMonth() + 1).padStart(2, "0")}${String(stamp.getDate()).padStart(2, "0")}-${String(stamp.getHours()).padStart(2, "0")}${String(stamp.getMinutes()).padStart(2, "0")}.txt`;
@@ -524,7 +535,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     }
   };
 
-  const displayNameFor = (from: string) => from;
+  const displayNameFor = (from: string) => displayDreamName(from);
 
   // 映写状態の変化に合わせて短いヒントを出す
   useEffect(() => {
@@ -710,7 +721,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
           <div className="flex items-center justify-between gap-3 text-[0.68rem] text-[rgba(255,255,255,0.6)]">
             <span>
               {COPY.LABEL_DN}
-              <span className="text-secondary ml-1">{myDreamName}</span>
+              <span className="text-secondary ml-1">{displayDreamName(myDreamName)}</span>
             </span>
             <span>参加者: {participantIds.length}</span>
             <span
@@ -744,7 +755,7 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
               );
             }
             const name = displayNameFor(msg.from);
-            const color = getUserColor(name);
+            const color = getUserColor(msg.from);
             const bubbleBg = withAlpha(color, 0.12);
             return (
               <div key={msg.id} className="flex gap-2 items-baseline">
