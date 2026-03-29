@@ -748,8 +748,42 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
         </div>
       </header>
 
-      {/* チャット本文（スクロール） */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 pb-28">
+      {/* 入力エリア：モバイルは画面下固定 / md以上はヘッダー直下（同じブロックを1つだけ使用） */}
+      <div
+        className="fixed left-0 right-0 bottom-0 z-40 w-full md:static md:bottom-auto md:z-auto md:shrink-0"
+        style={{ bottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="max-w-[960px] mx-auto border-t border-[rgba(255,255,255,0.1)] md:border-t-0 md:border-b px-4 py-3 bg-[rgba(13,15,18,0.55)] backdrop-blur-md">
+          {shareHint && (
+            <div className="mb-2 text-[0.72rem] text-[rgba(255,255,255,0.65)]">
+              {shareHint}
+            </div>
+          )}
+          <div className="flex gap-2 items-end pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:pb-0">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
+              placeholder={COPY.PLACEHOLDER_CHAT}
+              className="flex-1 min-w-0 bg-[rgba(0,0,0,0.35)] border border-[rgba(255,255,255,0.16)] rounded-md text-[16px] md:text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              className="shrink-0 px-4 py-2 text-[0.8rem] tracking-[0.15em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors rounded-md whitespace-nowrap"
+            >
+              {COPY.SEND_BUTTON}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* チャット本文（スクロール） — モバイルは下部固定入力の余白 pb-28 */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 pb-28 md:pb-4">
         {chatMessages.length === 0 && (
           <p className="text-[0.8rem] text-[rgba(255,255,255,0.4)]">
             ここにチャットが流れます。まだ何も話されていません。
@@ -816,43 +850,6 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
           {isAudioOn ? COPY.BTN_MUTE_ON : COPY.BTN_MUTE_OFF}
         </span>
       </button>
-
-      {/* 入力エリア（フッター固定） */}
-      <div
-        className="fixed left-0 right-0 bottom-0 z-40"
-        style={{ bottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="max-w-[960px] mx-auto border-t border-[rgba(255,255,255,0.1)] px-4 py-3 bg-[rgba(13,15,18,0.55)] backdrop-blur-md">
-          {shareHint && (
-            <div className="mb-2 text-[0.72rem] text-[rgba(255,255,255,0.65)]">
-              {shareHint}
-            </div>
-          )}
-          <div
-            className="flex gap-2 items-end"
-            style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-          >
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onCompositionStart={() => setIsComposing(true)}
-              onCompositionEnd={() => setIsComposing(false)}
-              placeholder={COPY.PLACEHOLDER_CHAT}
-              className="flex-1 min-w-0 bg-[rgba(0,0,0,0.35)] border border-[rgba(255,255,255,0.16)] rounded-md text-[16px] md:text-[0.85rem] px-3 py-2 outline-none focus:border-gold resize-none"
-            />
-            <button
-              type="button"
-              onClick={handleSend}
-              className="shrink-0 px-4 py-2 text-[0.8rem] tracking-[0.15em] bg-gold text-deep border border-gold hover:bg-transparent hover:text-gold transition-colors rounded-md whitespace-nowrap"
-            >
-              {COPY.SEND_BUTTON}
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* 瞼の裏側ポップアップ（ロゴクリックで表示） */}
       {showShareOverlay && (
