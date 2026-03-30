@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import BroadcastCountdownBanner from "@/components/BroadcastCountdownBanner";
+import MinogashiHeroBadge from "@/components/MinogashiHeroBadge";
+import MinogashiSection from "@/components/MinogashiSection";
 import {
   defaultBroadcastConfig,
+  formatMinogashiHeroBadgeText,
   normalizeBroadcastConfig,
   type BroadcastConfig,
 } from "@/lib/broadcast-config";
@@ -34,6 +37,12 @@ async function loadBroadcastConfig(): Promise<BroadcastConfig> {
 
 export default async function Home() {
   const cfg = await loadBroadcastConfig();
+  const showMinogashi =
+    cfg.topPage.minogashiVisible && cfg.topPage.minogashiYoutubeId.trim() !== "";
+  const minogashiHeroBadgeText = formatMinogashiHeroBadgeText(
+    cfg.topPage.minogashiHeroBadgeLead,
+    cfg.topPage.minogashiTitle
+  );
   return (
     <main>
       <BroadcastCountdownBanner />
@@ -56,6 +65,14 @@ export default async function Home() {
           <br />
           ONLINE / 無料
         </p>
+        {showMinogashi && cfg.topPage.minogashiCtaVariant === "B" ? (
+          <div
+            className="w-full flex justify-center px-2 animate-fade-in"
+            style={{ animationDelay: "1.55s" }}
+          >
+            <MinogashiHeroBadge badgeText={minogashiHeroBadgeText} />
+          </div>
+        ) : null}
         <div className="max-w-[520px] mt-12 animate-fade-in" style={{ animationDelay: "1.7s" }}>
           <p className="font-shippori text-[0.95rem] text-secondary leading-[2.2] tracking-[0.05em]">
             頭の中にはできてるんだ。<br />
@@ -71,6 +88,16 @@ export default async function Home() {
           </svg>
         </div>
       </section>
+
+      {showMinogashi ? (
+        <MinogashiSection
+          label={cfg.topPage.minogashiLabel}
+          title={cfg.topPage.minogashiTitle}
+          dateLine={cfg.topPage.minogashiDate}
+          description={cfg.topPage.minogashiDescription}
+          youtubeId={cfg.topPage.minogashiYoutubeId.trim()}
+        />
+      ) : null}
 
       <div className="divider" />
 

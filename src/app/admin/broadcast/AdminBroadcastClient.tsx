@@ -1,10 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import type { BroadcastConfig, ProgramItem } from "@/lib/broadcast-config";
+import type {
+  BroadcastConfig,
+  MinogashiCtaVariant,
+  ProgramItem,
+} from "@/lib/broadcast-config";
 import {
   defaultBroadcastConfig,
   epochMsToJstDateTimeLocal,
+  extractYoutubeVideoId,
+  formatMinogashiBannerLinkText,
+  formatMinogashiHeroBadgeText,
   jstDateTimeLocalToEpochMs,
 } from "@/lib/broadcast-config";
 
@@ -89,6 +96,35 @@ export default function AdminBroadcastClient({ token }: Props) {
     defaultBroadcastConfig.topPage.joinDateLine
   );
 
+  const [minogashiVisible, setMinogashiVisible] = useState<boolean>(
+    defaultBroadcastConfig.topPage.minogashiVisible
+  );
+  const [minogashiLabel, setMinogashiLabel] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiLabel
+  );
+  const [minogashiTitle, setMinogashiTitle] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiTitle
+  );
+  const [minogashiDate, setMinogashiDate] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiDate
+  );
+  const [minogashiYoutubeUrl, setMinogashiYoutubeUrl] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiYoutubeUrl
+  );
+  const [minogashiYoutubeId, setMinogashiYoutubeId] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiYoutubeId
+  );
+  const [minogashiDescription, setMinogashiDescription] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiDescription
+  );
+  const [minogashiHeroBadgeLead, setMinogashiHeroBadgeLead] = useState<string>(
+    defaultBroadcastConfig.topPage.minogashiHeroBadgeLead
+  );
+  const [minogashiCtaVariant, setMinogashiCtaVariant] =
+    useState<MinogashiCtaVariant>(
+      defaultBroadcastConfig.topPage.minogashiCtaVariant
+    );
+
   const [programItems, setProgramItems] = useState<ProgramItem[]>(
     defaultBroadcastConfig.programItems
   );
@@ -147,8 +183,40 @@ export default function AdminBroadcastClient({ token }: Props) {
       heroDateBadge,
       heroDateLine,
       joinDateLine,
+      minogashiVisible,
+      minogashiLabel,
+      minogashiTitle,
+      minogashiDate,
+      minogashiYoutubeUrl,
+      minogashiYoutubeId,
+      minogashiDescription,
+      minogashiHeroBadgeLead,
+      minogashiCtaVariant,
     };
-  }, [config.topPage, heroDateBadge, heroDateLine, joinDateLine]);
+  }, [
+    config.topPage,
+    heroDateBadge,
+    heroDateLine,
+    joinDateLine,
+    minogashiVisible,
+    minogashiLabel,
+    minogashiTitle,
+    minogashiDate,
+    minogashiYoutubeUrl,
+    minogashiYoutubeId,
+    minogashiDescription,
+    minogashiHeroBadgeLead,
+    minogashiCtaVariant,
+  ]);
+
+  const minogashiHeroBadgePreview = useMemo(
+    () => formatMinogashiHeroBadgeText(minogashiHeroBadgeLead, minogashiTitle),
+    [minogashiHeroBadgeLead, minogashiTitle]
+  );
+  const minogashiBannerLinkPreview = useMemo(
+    () => formatMinogashiBannerLinkText(minogashiHeroBadgeLead),
+    [minogashiHeroBadgeLead]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -187,6 +255,16 @@ export default function AdminBroadcastClient({ token }: Props) {
         setHeroDateBadge(loaded.topPage.heroDateBadge);
         setHeroDateLine(loaded.topPage.heroDateLine);
         setJoinDateLine(loaded.topPage.joinDateLine);
+
+        setMinogashiVisible(loaded.topPage.minogashiVisible);
+        setMinogashiLabel(loaded.topPage.minogashiLabel);
+        setMinogashiTitle(loaded.topPage.minogashiTitle);
+        setMinogashiDate(loaded.topPage.minogashiDate);
+        setMinogashiYoutubeUrl(loaded.topPage.minogashiYoutubeUrl);
+        setMinogashiYoutubeId(loaded.topPage.minogashiYoutubeId);
+        setMinogashiDescription(loaded.topPage.minogashiDescription);
+        setMinogashiHeroBadgeLead(loaded.topPage.minogashiHeroBadgeLead);
+        setMinogashiCtaVariant(loaded.topPage.minogashiCtaVariant);
 
         setProgramItems(toProgramItems(loaded.programItems));
       } catch (e) {
@@ -461,6 +539,136 @@ export default function AdminBroadcastClient({ token }: Props) {
                       className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
                       value={joinDateLine}
                       onChange={(e) => setJoinDateLine(e.target.value)}
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <section className="rounded border border-[rgba(255,255,255,0.08)] p-5 bg-[rgba(255,255,255,0.02)]">
+                <h2 className="text-[1rem] font-semibold mb-4">
+                  見逃し配信（トップ・ヒーロー直下）
+                </h2>
+                <p className="text-[0.85rem] opacity-75 mb-4 leading-relaxed">
+                  表示を切るときは「セクションを表示する」のチェックを外します。YouTube
+                  の URL または動画 ID のどちらかが分かれば表示できます（保存時に正規化されます）。
+                </p>
+                <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border border-[rgba(255,255,255,0.2)]"
+                    checked={minogashiVisible}
+                    onChange={(e) => setMinogashiVisible(e.target.checked)}
+                  />
+                  <span className="text-[0.9rem]">セクションを表示する（minogashi_visible）</span>
+                </label>
+                <fieldset className="mb-4 rounded border border-[rgba(255,255,255,0.08)] p-4 space-y-2">
+                  <legend className="text-[0.85rem] opacity-90 px-1 mb-1">
+                    ファーストビュー導線（minogashi_cta_variant）
+                  </legend>
+                  <p className="text-[0.75rem] opacity-65 leading-relaxed mb-2">
+                    コード変更なしで A / B を切り替えられます。左の文は下記「導線の左文」で共通編集。
+                  </p>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="minogashiCtaVariant"
+                      className="h-4 w-4"
+                      checked={minogashiCtaVariant === "A"}
+                      onChange={() => setMinogashiCtaVariant("A")}
+                    />
+                    <span className="text-[0.88rem]">
+                      案A — カウントダウンバナー内（REM Chat の下の小リンク）
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="minogashiCtaVariant"
+                      className="h-4 w-4"
+                      checked={minogashiCtaVariant === "B"}
+                      onChange={() => setMinogashiCtaVariant("B")}
+                    />
+                    <span className="text-[0.88rem]">
+                      案B — ヒーロー内ピル（ONLINE/無料の下）
+                    </span>
+                  </label>
+                  <div className="text-[0.72rem] opacity-65 font-mono pt-1 space-y-0.5">
+                    <div>バナー（A）: {minogashiBannerLinkPreview}</div>
+                    <div>ピル（B）: {minogashiHeroBadgePreview}</div>
+                  </div>
+                </fieldset>
+                <label className="block mb-4">
+                  <div className="text-[0.85rem] opacity-80 mb-1">
+                    導線の左文（minogashi_hero_badge_lead）
+                  </div>
+                  <p className="text-[0.75rem] opacity-65 mb-2 leading-relaxed">
+                    案A は「▶ 左の文 ↓」、案B は「▶ 左の文 — minogashi_title」。見逃しブロック見出しの
+                    minogashi_label とは別です。
+                  </p>
+                  <input
+                    className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                    value={minogashiHeroBadgeLead}
+                    onChange={(e) => setMinogashiHeroBadgeLead(e.target.value)}
+                  />
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="block">
+                    <div className="text-[0.85rem] opacity-80 mb-1">minogashi_label</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={minogashiLabel}
+                      onChange={(e) => setMinogashiLabel(e.target.value)}
+                    />
+                  </label>
+                  <label className="block">
+                    <div className="text-[0.85rem] opacity-80 mb-1">minogashi_title</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={minogashiTitle}
+                      onChange={(e) => setMinogashiTitle(e.target.value)}
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="text-[0.85rem] opacity-80 mb-1">minogashi_date</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={minogashiDate}
+                      onChange={(e) => setMinogashiDate(e.target.value)}
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="text-[0.85rem] opacity-80 mb-1">
+                      minogashi_youtube_url
+                    </div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={minogashiYoutubeUrl}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setMinogashiYoutubeUrl(v);
+                        const id = extractYoutubeVideoId(v);
+                        if (id) setMinogashiYoutubeId(id);
+                      }}
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="text-[0.85rem] opacity-80 mb-1">
+                      minogashi_youtube_id（自動でも可）
+                    </div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2 font-mono text-[0.9rem]"
+                      value={minogashiYoutubeId}
+                      onChange={(e) => setMinogashiYoutubeId(e.target.value)}
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="text-[0.85rem] opacity-80 mb-1">
+                      minogashi_description（任意）
+                    </div>
+                    <textarea
+                      className="w-full min-h-[72px] rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={minogashiDescription}
+                      onChange={(e) => setMinogashiDescription(e.target.value)}
                     />
                   </label>
                 </div>

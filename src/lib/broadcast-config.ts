@@ -3,6 +3,9 @@ export type ProgramItem = {
   desc: string;
 };
 
+/** 見逃しファーストビュー導線: A=カウントダウンバナー内リンク, B=ヒーロー内ピル */
+export type MinogashiCtaVariant = "A" | "B";
+
 export type BroadcastConfig = {
   version: number;
   countdown: {
@@ -32,6 +35,17 @@ export type BroadcastConfig = {
     heroDateBadge: string;
     heroDateLine: string;
     joinDateLine: string;
+    minogashiVisible: boolean;
+    minogashiLabel: string;
+    minogashiTitle: string;
+    minogashiDate: string;
+    minogashiYoutubeUrl: string;
+    minogashiYoutubeId: string;
+    minogashiDescription: string;
+    /** ヒーロー内ピル左側の文（右は minogashiTitle）。例: 前回の放送を観る。案Aのバナー文言左段にも使う */
+    minogashiHeroBadgeLead: string;
+    /** 見逃し導線: A=バナー内 / B=ヒーロー内ピル */
+    minogashiCtaVariant: MinogashiCtaVariant;
   };
   programItems: ProgramItem[];
 };
@@ -65,6 +79,15 @@ export const defaultBroadcastConfig: BroadcastConfig = {
     heroDateBadge: "2026.3.30 MON",
     heroDateLine: "2026年 3月30日（月）22:00〜",
     joinDateLine: "2026年3月30日（月）22:00〜 / オンライン / 無料",
+    minogashiVisible: true,
+    minogashiLabel: "見逃し夢配信",
+    minogashiTitle: "第二回 未完記念トークショー",
+    minogashiDate: "2026.3.30 MON 22:00〜",
+    minogashiYoutubeUrl: "https://youtu.be/RM77oWS95Ac",
+    minogashiYoutubeId: "RM77oWS95Ac",
+    minogashiDescription: "",
+    minogashiHeroBadgeLead: "前回の放送を観る",
+    minogashiCtaVariant: "A",
   },
   programItems: [
     {
@@ -94,6 +117,35 @@ export function epochMsToJstDateTimeLocal(epochMs: number): string {
   const hh = String(d.getUTCHours()).padStart(2, "0");
   const min = String(d.getUTCMinutes()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
+/** youtu.be / watch?v= / embed / 生の11桁ID から動画IDを取り出す */
+export function extractYoutubeVideoId(input: string): string | null {
+  const s = input.trim();
+  if (!s) return null;
+  const short = s.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (short?.[1]) return short[1];
+  const vParam = s.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (vParam?.[1]) return vParam[1];
+  const embed = s.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embed?.[1]) return embed[1];
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+  return null;
+}
+
+/** ヒーロー内ピルに表示する文言（▶ {lead} — {title}） */
+export function formatMinogashiHeroBadgeText(lead: string, title: string): string {
+  const l = lead.trim();
+  const t = title.trim();
+  const left = l.length > 0 ? l : "前回の放送を観る";
+  return `▶ ${left} — ${t}`;
+}
+
+/** 案A バナー内リンク（▶ {lead} ↓） */
+export function formatMinogashiBannerLinkText(lead: string): string {
+  const l = lead.trim();
+  const left = l.length > 0 ? l : "前回の放送を観る";
+  return `▶ ${left} ↓`;
 }
 
 export function jstDateTimeLocalToEpochMs(value: string): number {
@@ -199,20 +251,72 @@ export function normalizeBroadcastConfig(
           ? r.garageV2.closeEpochMs
           : fallback.garageV2.closeEpochMs,
     },
-    topPage: {
-      heroDateBadge:
-        typeof r.topPage?.heroDateBadge === "string"
-          ? r.topPage.heroDateBadge
-          : fallback.topPage.heroDateBadge,
-      heroDateLine:
-        typeof r.topPage?.heroDateLine === "string"
-          ? r.topPage.heroDateLine
-          : fallback.topPage.heroDateLine,
-      joinDateLine:
-        typeof r.topPage?.joinDateLine === "string"
-          ? r.topPage.joinDateLine
-          : fallback.topPage.joinDateLine,
-    },
+    topPage: (() => {
+      const tp = r.topPage;
+      const fb = fallback.topPage;
+      let minogashiYoutubeId =
+        typeof tp?.minogashiYoutubeId === "string"
+          ? tp.minogashiYoutubeId.trim()
+          : fb.minogashiYoutubeId;
+      const minogashiYoutubeUrl =
+        typeof tp?.minogashiYoutubeUrl === "string"
+          ? tp.minogashiYoutubeUrl.trim()
+          : fb.minogashiYoutubeUrl;
+      const extracted =
+        extractYoutubeVideoId(minogashiYoutubeId) ||
+        extractYoutubeVideoId(minogashiYoutubeUrl);
+      if (extracted) {
+        minogashiYoutubeId = extracted;
+      }
+
+      return {
+        heroDateBadge:
+          typeof tp?.heroDateBadge === "string"
+            ? tp.heroDateBadge
+            : fb.heroDateBadge,
+        heroDateLine:
+          typeof tp?.heroDateLine === "string"
+            ? tp.heroDateLine
+            : fb.heroDateLine,
+        joinDateLine:
+          typeof tp?.joinDateLine === "string"
+            ? tp.joinDateLine
+            : fb.joinDateLine,
+        minogashiVisible:
+          typeof tp?.minogashiVisible === "boolean"
+            ? tp.minogashiVisible
+            : fb.minogashiVisible,
+        minogashiLabel:
+          typeof tp?.minogashiLabel === "string"
+            ? tp.minogashiLabel
+            : fb.minogashiLabel,
+        minogashiTitle:
+          typeof tp?.minogashiTitle === "string"
+            ? tp.minogashiTitle
+            : fb.minogashiTitle,
+        minogashiDate:
+          typeof tp?.minogashiDate === "string"
+            ? tp.minogashiDate
+            : fb.minogashiDate,
+        minogashiYoutubeUrl:
+          minogashiYoutubeUrl.length > 0
+            ? minogashiYoutubeUrl
+            : fb.minogashiYoutubeUrl,
+        minogashiYoutubeId,
+        minogashiDescription:
+          typeof tp?.minogashiDescription === "string"
+            ? tp.minogashiDescription
+            : fb.minogashiDescription,
+        minogashiHeroBadgeLead:
+          typeof tp?.minogashiHeroBadgeLead === "string"
+            ? tp.minogashiHeroBadgeLead
+            : fb.minogashiHeroBadgeLead,
+        minogashiCtaVariant:
+          tp?.minogashiCtaVariant === "A" || tp?.minogashiCtaVariant === "B"
+            ? tp.minogashiCtaVariant
+            : fb.minogashiCtaVariant,
+      };
+    })(),
     programItems: Array.isArray(r.programItems)
       ? r.programItems
           .filter(

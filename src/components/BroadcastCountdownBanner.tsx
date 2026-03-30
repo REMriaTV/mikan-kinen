@@ -2,8 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import MinogashiBannerCta from "@/components/MinogashiBannerCta";
 import {
   defaultBroadcastConfig,
+  formatMinogashiBannerLinkText,
   type BroadcastConfig,
 } from "@/lib/broadcast-config";
 
@@ -52,6 +54,14 @@ export default function BroadcastCountdownBanner() {
   const isLive = mounted && remainingMs <= 0;
   const countdown = useMemo(() => formatCountdown(remainingMs), [remainingMs]);
 
+  const showMinogashiBannerCta =
+    cfg.topPage.minogashiVisible &&
+    cfg.topPage.minogashiYoutubeId.trim() !== "" &&
+    cfg.topPage.minogashiCtaVariant === "A";
+  const minogashiBannerLinkText = formatMinogashiBannerLinkText(
+    cfg.topPage.minogashiHeroBadgeLead
+  );
+
   return (
     <section className="bg-[#0D0F12] text-[#E8E4DF] border-b border-[rgba(255,255,255,0.06)]">
       <div className="max-w-[960px] mx-auto px-6 py-6 md:py-8 space-y-4">
@@ -97,6 +107,9 @@ export default function BroadcastCountdownBanner() {
             <div className="text-[0.75rem] text-[rgba(232,228,223,0.65)]">
               {isLive ? cfg.countdown.remChatNoteAfter : cfg.countdown.remChatNoteBefore}
             </div>
+            {showMinogashiBannerCta ? (
+              <MinogashiBannerCta linkText={minogashiBannerLinkText} />
+            ) : null}
           </div>
         </div>
 
