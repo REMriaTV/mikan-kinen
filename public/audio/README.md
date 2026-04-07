@@ -2,7 +2,7 @@
 
 ## Supabase 管理（推奨）
 
-本番では **`/admin/nemumi-audio?token=…`** からブラウザアップロードし、Storage `nemumi-audio` + テーブル `nemumi_audio_assets` に登録します。ねむみ放送は `/api/nemumi-audio` で公開 URL を取得します。
+素材マスタは **`nemumi_audio_tracks`**（初回 `/api/nemumi-audio` 等でコード既定が自動投入）。**`/admin/nemumi-audio?token=…`** で素材の追加・編集・削除と、Storage `nemumi-audio` + **`nemumi_audio_assets`** への音源アップロードができます。公開は **`/api/nemumi-audio`** です。
 
 ## ローカル `public/audio`（フォールバック）
 

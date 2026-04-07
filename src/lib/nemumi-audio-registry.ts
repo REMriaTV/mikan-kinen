@@ -37,3 +37,8 @@ export function isKnownNemumiTrackId(id: string): boolean {
 export function getRegistryEntry(trackId: string): NemumiAudioRegistryEntry | undefined {
   return NEMUMI_AUDIO_REGISTRY.find((e) => e.trackId === trackId);
 }
+
+/** 新規トラック ID（英小文字・数字・-_、先頭は英字） */
+export function isValidNemumiTrackSlug(id: string): boolean {
+  return /^[a-z][a-z0-9_-]{1,48}$/.test(id);
+}

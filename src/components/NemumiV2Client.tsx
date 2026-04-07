@@ -135,6 +135,32 @@ function NemumiV2Inner() {
     }));
   }, [resolvedAudio]);
 
+  const seAllList = useMemo(() => {
+    if (resolvedAudio) {
+      return [...resolvedAudio.se, ...resolvedAudio.interactive];
+    }
+    return NEMUMI_SE_TRACKS.map((t) => ({ id: t.id, label: t.label, path: t.path }));
+  }, [resolvedAudio]);
+
+  const bgmListRef = useRef(bgmList);
+  const seAllListRef = useRef(seAllList);
+  useEffect(() => {
+    bgmListRef.current = bgmList;
+  }, [bgmList]);
+  useEffect(() => {
+    seAllListRef.current = seAllList;
+  }, [seAllList]);
+
+  useEffect(() => {
+    setBgmLocalState((prev) => {
+      const next: Record<string, { on: boolean; vol: number }> = {};
+      for (const t of bgmList) {
+        next[t.id] = prev[t.id] ?? { on: false, vol: 0.6 };
+      }
+      return next;
+    });
+  }, [bgmList]);
+
   const myDreamName = useMemo(
     () => resolvedName || "（未設定）",
     [resolvedName]
@@ -193,9 +219,10 @@ function NemumiV2Inner() {
 
   const applyBgmPayload = useCallback((p: NemumiAudioPayload) => {
     if (p.t === "se") {
-      const tr = NEMUMI_SE_TRACKS.find((x) => x.id === p.id);
+      const tr = seAllListRef.current.find((x) => x.id === p.id);
       if (!tr) return;
       const url = pathByTrackIdRef.current[p.id] ?? tr.path;
+      if (!url) return;
       const a = new Audio(url);
       a.volume = 0.75;
       a.play().catch(() => {});
@@ -209,13 +236,13 @@ function NemumiV2Inner() {
       }
       setBgmLocalState(
         Object.fromEntries(
-          NEMUMI_BGM_TRACKS.map((x) => [x.id, { on: false, vol: 0.6 }])
+          bgmListRef.current.map((x) => [x.id, { on: false, vol: 0.6 }])
         ) as Record<string, { on: boolean; vol: number }>
       );
       return;
     }
     if (p.t === "bgm" && "trackId" in p) {
-      const meta = NEMUMI_BGM_TRACKS.find((x) => x.id === p.trackId);
+      const meta = bgmListRef.current.find((x) => x.id === p.trackId);
       if (!meta) return;
       const map = bgmAudioMapRef.current;
       if (p.action === "stop") {
@@ -241,6 +268,7 @@ function NemumiV2Inner() {
       }
       if (p.action === "start") {
         const src = pathByTrackIdRef.current[p.trackId] ?? meta.path;
+        if (!src) return;
         let el = map[p.trackId];
         if (!el) {
           el = new Audio(src);

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isKnownNemumiTrackId } from "@/lib/nemumi-audio-registry";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +28,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const trackId = body.trackId;
-  if (typeof trackId !== "string" || !isKnownNemumiTrackId(trackId)) {
+  const trackId = typeof body.trackId === "string" ? body.trackId.trim() : "";
+  if (!trackId) {
     return NextResponse.json({ ok: false, error: "Invalid trackId" }, { status: 400 });
   }
 

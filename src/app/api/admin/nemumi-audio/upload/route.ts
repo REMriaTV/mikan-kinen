@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getRegistryEntry, isKnownNemumiTrackId } from "@/lib/nemumi-audio-registry";
+import { getRegistryEntry } from "@/lib/nemumi-audio-registry";
+import { ensureDefaultNemumiTracksIfEmpty } from "@/lib/nemumi-tracks-ensure";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -57,14 +58,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const trackId = formData.get("trackId");
-  if (typeof trackId !== "string" || !isKnownNemumiTrackId(trackId)) {
+  const rawId = formData.get("trackId");
+  if (typeof rawId !== "string" || !rawId.trim()) {
     return NextResponse.json({ ok: false, error: "Invalid trackId" }, { status: 400 });
   }
+  const trackId = rawId.trim();
 
-  const entry = getRegistryEntry(trackId);
-  if (!entry) {
-    return NextResponse.json({ ok: false, error: "Unknown track" }, { status: 400 });
+  const supabase = getSupabaseAdminClient();
+  await ensureDefaultNemumiTracksIfEmpty(supabase);
+  const { data: dbTrack } = await supabase
+    .from("nemumi_audio_tracks")
+    .select("category")
+    .eq("track_id", trackId)
+    .maybeSingle();
+
+  const regEntry = getRegistryEntry(trackId);
+  const category = dbTrack?.category ?? regEntry?.category;
+  if (!category) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "トラックが見つかりません（nemumi_audio_tracks に枠があるか、コード既定の trackId かを確認してください）",
+      },
+      { status: 400 }
+    );
   }
 
   const file = formData.get("file");
@@ -84,12 +102,11 @@ export async function POST(req: Request) {
   const fname =
     file instanceof File && file.name ? file.name : `upload.${extFromMime(mime, "upload.mp3")}`;
   const ext = extFromMime(mime, fname);
-  const folder = folderForCategory(entry.category);
+  const folder = folderForCategory(category);
   const storagePath = `${folder}/${trackId}.${ext}`;
 
   const buf = Buffer.from(await file.arrayBuffer());
 
-  const supabase = getSupabaseAdminClient();
   const { error: upErr } = await supabase.storage
     .from("nemumi-audio")
     .upload(storagePath, buf, {
