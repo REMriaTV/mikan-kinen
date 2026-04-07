@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
-const ROOM_KEY = "garage-room";
+const DEFAULT_ROOM_KEY = "garage-room";
 const MAX_BODY = 4000;
 const MAX_NAME = 120;
 const DEFAULT_LIMIT = 200;
@@ -9,6 +9,8 @@ const MAX_LIMIT = 500;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+  const roomKey =
+    searchParams.get("room_key")?.trim() || DEFAULT_ROOM_KEY;
   const rawLimit = searchParams.get("limit");
   const limit = Math.min(
     MAX_LIMIT,
@@ -20,7 +22,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabase
       .from("garage_chat_messages")
       .select("id, from_name, body, is_system, created_at")
-      .eq("room_key", ROOM_KEY)
+      .eq("room_key", roomKey)
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -47,7 +49,16 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const o = body as { fromName?: unknown; body?: unknown; isSystem?: unknown };
+  const o = body as {
+    fromName?: unknown;
+    body?: unknown;
+    isSystem?: unknown;
+    roomKey?: unknown;
+  };
+  const roomKey =
+    typeof o.roomKey === "string" && o.roomKey.trim()
+      ? o.roomKey.trim()
+      : DEFAULT_ROOM_KEY;
   const fromName = typeof o.fromName === "string" ? o.fromName.trim() : "";
   const text = typeof o.body === "string" ? o.body : "";
   const isSystem = o.isSystem === true;
@@ -64,7 +75,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabase
       .from("garage_chat_messages")
       .insert({
-        room_key: ROOM_KEY,
+        room_key: roomKey,
         from_name: fromName,
         body: text,
         is_system: isSystem,

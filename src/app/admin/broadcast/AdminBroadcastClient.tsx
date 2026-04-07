@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import AdminNav from "@/components/AdminNav";
 import type {
   BroadcastConfig,
   MinogashiCtaVariant,
@@ -125,6 +126,28 @@ export default function AdminBroadcastClient({ token }: Props) {
       defaultBroadcastConfig.topPage.minogashiCtaVariant
     );
 
+  const [nemumiVisible, setNemumiVisible] = useState<boolean>(
+    defaultBroadcastConfig.nemumi.visible
+  );
+  const [nemumiLabel, setNemumiLabel] = useState<string>(
+    defaultBroadcastConfig.nemumi.label
+  );
+  const [nemumiDate, setNemumiDate] = useState<string>(
+    defaultBroadcastConfig.nemumi.date
+  );
+  const [nemumiNoteBefore, setNemumiNoteBefore] = useState<string>(
+    defaultBroadcastConfig.nemumi.noteBefore
+  );
+  const [nemumiNoteAfter, setNemumiNoteAfter] = useState<string>(
+    defaultBroadcastConfig.nemumi.noteAfter
+  );
+  const [nemumiUnlockJst, setNemumiUnlockJst] = useState<string>(
+    epochMsToJstDateTimeLocal(defaultBroadcastConfig.nemumi.unlockEpochMs)
+  );
+  const [nemumiCloseJst, setNemumiCloseJst] = useState<string>(
+    epochMsToJstDateTimeLocal(defaultBroadcastConfig.nemumi.closeEpochMs)
+  );
+
   const [programItems, setProgramItems] = useState<ProgramItem[]>(
     defaultBroadcastConfig.programItems
   );
@@ -176,6 +199,28 @@ export default function AdminBroadcastClient({ token }: Props) {
       closeEpochMs: jstDateTimeLocalToEpochMs(closeJst),
     };
   }, [config.garageV2, unlockJst, closeJst]);
+
+  const derivedNemumiConfig = useMemo(() => {
+    return {
+      ...config.nemumi,
+      visible: nemumiVisible,
+      label: nemumiLabel,
+      date: nemumiDate,
+      noteBefore: nemumiNoteBefore,
+      noteAfter: nemumiNoteAfter,
+      unlockEpochMs: jstDateTimeLocalToEpochMs(nemumiUnlockJst),
+      closeEpochMs: jstDateTimeLocalToEpochMs(nemumiCloseJst),
+    };
+  }, [
+    config.nemumi,
+    nemumiVisible,
+    nemumiLabel,
+    nemumiDate,
+    nemumiNoteBefore,
+    nemumiNoteAfter,
+    nemumiUnlockJst,
+    nemumiCloseJst,
+  ]);
 
   const derivedTopPageConfig = useMemo(() => {
     return {
@@ -238,6 +283,14 @@ export default function AdminBroadcastClient({ token }: Props) {
         setUnlockJst(epochMsToJstDateTimeLocal(loaded.garageV2.unlockEpochMs));
         setCloseJst(epochMsToJstDateTimeLocal(loaded.garageV2.closeEpochMs));
 
+        setNemumiVisible(loaded.nemumi.visible);
+        setNemumiLabel(loaded.nemumi.label);
+        setNemumiDate(loaded.nemumi.date);
+        setNemumiNoteBefore(loaded.nemumi.noteBefore);
+        setNemumiNoteAfter(loaded.nemumi.noteAfter);
+        setNemumiUnlockJst(epochMsToJstDateTimeLocal(loaded.nemumi.unlockEpochMs));
+        setNemumiCloseJst(epochMsToJstDateTimeLocal(loaded.nemumi.closeEpochMs));
+
         setBroadcastLabel(loaded.countdown.broadcastLabel);
         setEventDate(loaded.countdown.eventDate);
         setEventTagline(loaded.countdown.eventTagline);
@@ -291,6 +344,7 @@ export default function AdminBroadcastClient({ token }: Props) {
         countdown: derivedCountdownConfig,
         colorBar: derivedColorBarConfig,
         garageV2: derivedGarageV2Config,
+        nemumi: derivedNemumiConfig,
         topPage: derivedTopPageConfig,
         programItems: toProgramItems(programItems),
       };
@@ -354,6 +408,7 @@ export default function AdminBroadcastClient({ token }: Props) {
   return (
     <div className="min-h-[100dvh] bg-[#0D0F12] text-[#E8E4DF] px-6 py-10">
       <div className="max-w-[900px] mx-auto">
+        <AdminNav token={token} current="broadcast" />
         <h1 className="text-[1.2rem] font-bold mb-6">Broadcast Admin</h1>
 
         {error && (
@@ -406,6 +461,75 @@ export default function AdminBroadcastClient({ token }: Props) {
                       type="datetime-local"
                       value={closeJst}
                       onChange={(e) => setCloseJst(e.target.value)}
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <section className="rounded border border-[rgba(224,90,51,0.2)] p-5 bg-[rgba(224,90,51,0.04)]">
+                <h2 className="text-[1rem] font-semibold mb-2">ねむみ放送（/nemumi-v2）</h2>
+                <p className="text-[0.8rem] opacity-75 mb-4 leading-relaxed">
+                  トップの導線表示・ねむみ部屋の解錠/終了時刻。合言葉は環境変数{" "}
+                  <code className="text-[0.75rem]">NEMUMI_V2_PASSPHRASE</code> で設定します。
+                </p>
+                <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border border-[rgba(255,255,255,0.2)]"
+                    checked={nemumiVisible}
+                    onChange={(e) => setNemumiVisible(e.target.checked)}
+                  />
+                  <span className="text-[0.9rem]">トップにねむみボタンを表示（nemumi_visible）</span>
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="block">
+                    <div className="text-[0.85rem] opacity-80 mb-1">nemumi_label</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={nemumiLabel}
+                      onChange={(e) => setNemumiLabel(e.target.value)}
+                    />
+                  </label>
+                  <label className="block">
+                    <div className="text-[0.85rem] opacity-80 mb-1">nemumi_date（補助テキスト）</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={nemumiDate}
+                      onChange={(e) => setNemumiDate(e.target.value)}
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="text-[0.85rem] opacity-80 mb-1">nemumi_note_before（待機）</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={nemumiNoteBefore}
+                      onChange={(e) => setNemumiNoteBefore(e.target.value)}
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="text-[0.85rem] opacity-80 mb-1">nemumi_note_after（終了後）</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      value={nemumiNoteAfter}
+                      onChange={(e) => setNemumiNoteAfter(e.target.value)}
+                    />
+                  </label>
+                  <label className="block">
+                    <div className="text-[0.85rem] opacity-80 mb-1">ねむみ 解錠（JST）</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      type="datetime-local"
+                      value={nemumiUnlockJst}
+                      onChange={(e) => setNemumiUnlockJst(e.target.value)}
+                    />
+                  </label>
+                  <label className="block">
+                    <div className="text-[0.85rem] opacity-80 mb-1">ねむみ 終了（JST）</div>
+                    <input
+                      className="w-full rounded bg-[#151820] border border-[rgba(255,255,255,0.10)] px-3 py-2"
+                      type="datetime-local"
+                      value={nemumiCloseJst}
+                      onChange={(e) => setNemumiCloseJst(e.target.value)}
                     />
                   </label>
                 </div>

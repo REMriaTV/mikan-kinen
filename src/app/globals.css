@@ -185,3 +185,18 @@ body {
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
+/* ねむみ v2: 背景の極わずかな明滅（指示書「画面の呼吸」） */
+@keyframes nemumi-breathe {
+  0%,
+  100% {
+    background-color: #080a0d;
+  }
+  40% {
+    background-color: #0c1016;
+  }
+}
+
+.nemumi-breathe {
+  animation: nemumi-breathe 10s ease-in-out infinite;
+}

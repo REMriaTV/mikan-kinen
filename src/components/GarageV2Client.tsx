@@ -11,6 +11,10 @@ import {
   useParticipantIds,
   useScreenShare,
 } from "@daily-co/daily-react";
+import {
+  displayDreamName,
+  makeUniqueDreamName,
+} from "@/lib/dream-names";
 
 const GARAGE_ROOM_URL = "https://remreal-tv.daily.co/garage-room";
 
@@ -41,64 +45,6 @@ const COPY = {
   EXPORT_FILE_ONLY:
     "テキストファイルを保存しました。夢日記に貼るときは、保存したファイルを開いてコピーしてください。",
 } as const;
-
-const DREAM_NAME_CANDIDATES = [
-  "夢の中の通りすがりA",
-  "夢の中の通りすがりB",
-  "あっちの世界の一般人",
-  "寝ても覚めても寝不足",
-  "マイケル小林",
-  "モブボブ",
-  "世界一のいびきかき",
-  "空とぶ鼻水",
-  "絶対に割れないシャボン玉",
-  "惑星ジャグラー",
-  "4,032,519,831代目",
-  "初代",
-  "次世代",
-  "サンタを届けるトナカイ",
-  "エリック・クラッカートン",
-  "無限に食べ続けられる下敷き",
-  "やみ夜のおなら",
-  "鉄のまくら",
-  "ピンク時々モスグリーンの空",
-  "夢の番人の娘",
-  "占い師の占い師",
-  "電動ピース",
-  "ブラインドに指を挟む少年",
-  "駅長C",
-  "長ズボンのじっじ",
-  "夜行性太陽",
-  "誰かの弟子",
-];
-
-function getRandomDreamName() {
-  return DREAM_NAME_CANDIDATES[
-    Math.floor(Math.random() * DREAM_NAME_CANDIDATES.length)
-  ];
-}
-
-/** 無記名入室時: 候補から1つ選び、末尾に一意IDを付けて他ユーザーと名前・色が被らないようにする */
-function makeUniqueDreamName(): string {
-  const base = getRandomDreamName();
-  let suffix: string;
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    suffix = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
-  } else {
-    suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`.slice(0, 12);
-  }
-  return `${base}·${suffix}`;
-}
-
-/** 内部ID（·サフィックス）は Daily / 色分け用に保持し、UI には出さない */
-function displayDreamName(full: string): string {
-  if (!full || typeof full !== "string") return full;
-  const hex10 = full.match(/^(.*)·[0-9a-f]{10}$/i);
-  if (hex10?.[1]) return hex10[1];
-  const alnum = full.match(/^(.*)·[a-z0-9]{10,12}$/i);
-  if (alnum?.[1]) return alnum[1];
-  return full;
-}
 
 // ユーザー名から安定した色を割り当て（チャット色分け用）
 const USER_COLORS = [

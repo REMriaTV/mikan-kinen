@@ -31,6 +31,16 @@ export type BroadcastConfig = {
     unlockEpochMs: number;
     closeEpochMs: number;
   };
+  /** ねむみ放送（寝落ちチャンネル）トップ導線・解錠時刻 */
+  nemumi: {
+    visible: boolean;
+    label: string;
+    date: string;
+    noteBefore: string;
+    noteAfter: string;
+    unlockEpochMs: number;
+    closeEpochMs: number;
+  };
   topPage: {
     heroDateBadge: string;
     heroDateLine: string;
@@ -74,6 +84,15 @@ export const defaultBroadcastConfig: BroadcastConfig = {
   garageV2: {
     unlockEpochMs: Date.parse("2026-03-30T12:55:00Z"),
     closeEpochMs: Date.parse("2026-03-30T14:30:00Z"),
+  },
+  nemumi: {
+    visible: false,
+    label: "寝落ちチャンネル（ねむみ）",
+    date: "",
+    noteBefore: "ねむみの波が近づいています...",
+    noteAfter: "ねむみの波の中にいます",
+    unlockEpochMs: Date.parse("2020-01-01T00:00:00Z"),
+    closeEpochMs: Date.parse("2099-12-31T14:59:00Z"),
   },
   topPage: {
     heroDateBadge: "2026.3.30 MON",
@@ -250,6 +269,31 @@ export function normalizeBroadcastConfig(
         typeof r.garageV2?.closeEpochMs === "number"
           ? r.garageV2.closeEpochMs
           : fallback.garageV2.closeEpochMs,
+    },
+    nemumi: {
+      visible:
+        typeof r.nemumi?.visible === "boolean"
+          ? r.nemumi.visible
+          : fallback.nemumi.visible,
+      label:
+        typeof r.nemumi?.label === "string" ? r.nemumi.label : fallback.nemumi.label,
+      date: typeof r.nemumi?.date === "string" ? r.nemumi.date : fallback.nemumi.date,
+      noteBefore:
+        typeof r.nemumi?.noteBefore === "string"
+          ? r.nemumi.noteBefore
+          : fallback.nemumi.noteBefore,
+      noteAfter:
+        typeof r.nemumi?.noteAfter === "string"
+          ? r.nemumi.noteAfter
+          : fallback.nemumi.noteAfter,
+      unlockEpochMs:
+        typeof r.nemumi?.unlockEpochMs === "number"
+          ? r.nemumi.unlockEpochMs
+          : fallback.nemumi.unlockEpochMs,
+      closeEpochMs:
+        typeof r.nemumi?.closeEpochMs === "number"
+          ? r.nemumi.closeEpochMs
+          : fallback.nemumi.closeEpochMs,
     },
     topPage: (() => {
       const tp = r.topPage;

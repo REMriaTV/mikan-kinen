@@ -82,6 +82,26 @@ export default async function Home() {
             余白の中に物語が立ち現れる。
           </p>
         </div>
+        {cfg.nemumi.visible ? (
+          <div
+            className="mt-10 max-w-[520px] mx-auto text-center animate-fade-in px-2"
+            style={{ animationDelay: "1.75s" }}
+          >
+            <Link
+              href="/nemumi-v2"
+              className="inline-block text-[0.72rem] tracking-[0.22em] border border-[rgba(224,90,51,0.45)] text-[#e8c9bf] px-8 py-3 rounded-sm hover:bg-[rgba(224,90,51,0.1)] hover:border-[rgba(224,90,51,0.65)] transition-all"
+            >
+              <span className="block font-shippori text-[0.85rem] tracking-[0.12em]">
+                {cfg.nemumi.label}
+              </span>
+              {cfg.nemumi.date.trim() ? (
+                <span className="block text-[0.68rem] text-dim mt-2 tracking-[0.08em]">
+                  {cfg.nemumi.date}
+                </span>
+              ) : null}
+            </Link>
+          </div>
+        ) : null}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float" style={{ animationDelay: "2.5s" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-dim">
             <path d="M12 5v14M5 12l7 7 7-7" />
