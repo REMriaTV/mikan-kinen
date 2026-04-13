@@ -7,23 +7,23 @@ export type RemGarageSeItem = { id: string; label: string; path: string };
 export type RemGarageBgmItem = { id: string; label: string; path: string };
 
 export const REM_GARAGE_CUE_PATHS = {
-  "pre-broadcast": "/audio/opening/pre-broadcast.mp3",
+  /**
+   * 専用の pre-broadcast.mp3 を `public/audio/opening/` に置けば差し替え可。
+   * 未配置時は opening と同じファイルを参照（自動開局前BGMと手動が同じ音源になる）。
+   */
+  "pre-broadcast": "/audio/opening/opening.mp3",
   opening: "/audio/opening/opening.mp3",
   ending: "/audio/ending/ending.mp3",
 } as const;
 
 export type RemGarageCueId = keyof typeof REM_GARAGE_CUE_PATHS;
 
-/** ジングル（ワンショット）— 指示書 A-3 に準拠 */
+/**
+ * ジングル（ワンショット）— public/audio/se/ に置いたファイル名と一致させる。
+ * （未配置のボタンは追加しない。ファイルを増やしたらここに追記。）
+ */
 export const REM_GARAGE_SE_TRACKS: RemGarageSeItem[] = [
   { id: "rooster", label: "鶏", path: "/audio/se/rooster.mp3" },
-  { id: "charumera", label: "チャルメラ", path: "/audio/se/charumera.mp3" },
-  { id: "joya-no-kane", label: "除夜の鐘", path: "/audio/se/joya-no-kane.mp3" },
-  { id: "yoru-karasu", label: "夜カラス", path: "/audio/se/yoru-karasu.mp3" },
-  { id: "yopparai", label: "足音", path: "/audio/se/yopparai.mp3" },
-  { id: "jitensha", label: "自転車", path: "/audio/se/jitensha.mp3" },
-  { id: "truck", label: "トラック", path: "/audio/se/truck.mp3" },
-  { id: "niwatori-yonaki", label: "鶏夜鳴き", path: "/audio/se/niwatori-yonaki.mp3" },
 ];
 
 /** BGM（ループ）— ファイルを置いたらここに追記 */
