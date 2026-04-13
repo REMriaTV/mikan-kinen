@@ -30,6 +30,16 @@ export const REM_GARAGE_SE_TRACKS: RemGarageSeItem[] = [
 export const REM_GARAGE_BGM_TRACKS: RemGarageBgmItem[] = [
   { id: "ambient-01", label: "Ambient 01", path: "/audio/bgm/ambient-01.mp3" },
   { id: "ambient-02", label: "Ambient 02", path: "/audio/bgm/ambient-02.mp3" },
+  {
+    id: "music-yashyamaru-chonaikankyou",
+    label: "夜叉丸 室内環境",
+    path: "/audio/music/yashyamaru-chonaikankyou.mp3",
+  },
+  {
+    id: "music-pinopi-aru-hi-ii-tenki",
+    label: "ピノピ ある日いい天気",
+    path: "/audio/music/pinopi-aru-hi-ii-tenki.mp3",
+  },
 ];
 
 export type RemGarageAudioPayload =
