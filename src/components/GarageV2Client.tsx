@@ -8,6 +8,7 @@ import {
   DailyAudio,
   useDaily,
   useDailyEvent,
+  useLocalSessionId,
   useParticipantIds,
   useScreenShare,
 } from "@daily-co/daily-react";
@@ -15,6 +16,20 @@ import {
   displayDreamName,
   makeUniqueDreamName,
 } from "@/lib/dream-names";
+import { defaultBroadcastConfig, type BroadcastConfig } from "@/lib/broadcast-config";
+import GarageMusicAdminPanel, {
+  readGarageMusicAdminSession,
+  writeGarageMusicAdminSession,
+} from "@/components/GarageMusicAdminPanel";
+import GarageRemoteRemMusicAudio from "@/components/GarageRemoteRemMusicAudio";
+import { GARAGE_SYNC_MODE_KEY, type GarageSyncMode } from "@/lib/rem-garage-audio-constants";
+import { RemGarageAudioRouter } from "@/lib/rem-garage-audio-router";
+import {
+  REM_GARAGE_BGM_TRACKS,
+  REM_GARAGE_CUE_PATHS,
+  REM_GARAGE_SE_TRACKS,
+  type RemGarageAudioPayload,
+} from "@/lib/rem-garage-audio-config";
 
 const GARAGE_ROOM_URL = "https://remreal-tv.daily.co/garage-room";
 
@@ -139,8 +154,36 @@ function ScreenShareVideo({
   );
 }
 
-function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
+function clearRemGarageLocalAudio(
+  bgmMap: React.MutableRefObject<Partial<Record<string, HTMLAudioElement>>>,
+  cuePre: React.MutableRefObject<HTMLAudioElement | null>
+) {
+  try {
+    cuePre.current?.pause();
+  } catch {
+    /* ignore */
+  }
+  cuePre.current = null;
+  const m = bgmMap.current;
+  for (const k of Object.keys(m)) {
+    try {
+      m[k]?.pause();
+    } catch {
+      /* ignore */
+    }
+    m[k] = undefined;
+  }
+}
+
+function GarageV2Inner({
+  shouldForceClose,
+  broadcastCfg,
+}: {
+  shouldForceClose: boolean;
+  broadcastCfg: BroadcastConfig;
+}) {
   const daily = useDaily();
+  const localSessionId = useLocalSessionId();
   const participantIds = useParticipantIds();
   const [joined, setJoined] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
@@ -162,10 +205,211 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
   const [garageConfigReady, setGarageConfigReady] = useState(false);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const announcedJoinIdsRef = useRef<Set<string>>(new Set());
+  const [isMusicAdmin, setIsMusicAdmin] = useState(false);
+  const [syncMode, setSyncMode] = useState<GarageSyncMode>(() =>
+    typeof window !== "undefined" &&
+    sessionStorage.getItem(GARAGE_SYNC_MODE_KEY) === "htmlAudio"
+      ? "htmlAudio"
+      : "customTrack"
+  );
+  const [masterVolume, setMasterVolume] = useState(0.85);
+  const [customPublishing, setCustomPublishing] = useState(false);
+  const [customTrackError, setCustomTrackError] = useState<string | null>(null);
+  const remGarageRouterRef = useRef<RemGarageAudioRouter | null>(null);
+  const bgmAudioMapRef = useRef<Partial<Record<string, HTMLAudioElement>>>({});
+  const cuePreAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const sePathById = useMemo(
+    () => Object.fromEntries(REM_GARAGE_SE_TRACKS.map((s) => [s.id, s.path])) as Record<
+      string,
+      string
+    >,
+    []
+  );
+
+  const applyRemGarageAudio = useCallback(
+    (p: RemGarageAudioPayload) => {
+      if (p.t === "se") {
+        const path = sePathById[p.id];
+        if (!path) return;
+        const a = new Audio(path);
+        a.volume = 0.85;
+        a.play().catch(() => {});
+        return;
+      }
+      if (p.t === "cue") {
+        const path = REM_GARAGE_CUE_PATHS[p.id];
+        if (!path) return;
+        if (p.id === "pre-broadcast") {
+          let el = cuePreAudioRef.current;
+          if (!el) {
+            el = new Audio(path);
+            el.loop = true;
+            cuePreAudioRef.current = el;
+          }
+          el.volume = 0.5;
+          el.play().catch(() => {});
+          return;
+        }
+        if (p.id === "opening") {
+          const pre = cuePreAudioRef.current;
+          if (pre) {
+            try {
+              pre.pause();
+              pre.currentTime = 0;
+            } catch {
+              /* ignore */
+            }
+          }
+          const a = new Audio(path);
+          a.volume = 0.9;
+          a.play().catch(() => {});
+          return;
+        }
+        if (p.id === "ending") {
+          const a = new Audio(path);
+          a.volume = 0.85;
+          a.play().catch(() => {});
+        }
+        return;
+      }
+      if (p.t === "bgm" && p.action === "stopAll") {
+        clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+        return;
+      }
+      if (p.t === "bgm" && "trackId" in p) {
+        const meta = REM_GARAGE_BGM_TRACKS.find((x) => x.id === p.trackId);
+        if (!meta) return;
+        const map = bgmAudioMapRef.current;
+        if (p.action === "stop") {
+          map[p.trackId]?.pause();
+          map[p.trackId] = undefined;
+          return;
+        }
+        if (p.action === "volume") {
+          const el = map[p.trackId];
+          if (el && typeof p.volume === "number") {
+            el.volume = Math.max(0, Math.min(1, p.volume));
+          }
+          return;
+        }
+        if (p.action === "start") {
+          let el = map[p.trackId];
+          if (!el) {
+            el = new Audio(meta.path);
+            el.loop = true;
+            map[p.trackId] = el;
+          }
+          el.volume = typeof p.volume === "number" ? p.volume : 0.45;
+          el.play().catch(() => {});
+        }
+      }
+    },
+    [sePathById]
+  );
+
+  const disposeRemGarageRouter = useCallback(async () => {
+    const router = remGarageRouterRef.current;
+    if (!router) return;
+    if (daily) {
+      try {
+        await router.stopCustomTrackPublishing(daily);
+      } catch {
+        /* ignore */
+      }
+    }
+    try {
+      router.dispose();
+    } catch {
+      /* ignore */
+    }
+    remGarageRouterRef.current = null;
+    setCustomPublishing(false);
+  }, [daily]);
+
+  const broadcastRemGarageAudio = useCallback(
+    async (payload: RemGarageAudioPayload) => {
+      if (isMusicAdmin && syncMode === "customTrack") {
+        setCustomTrackError(null);
+        if (!remGarageRouterRef.current) {
+          remGarageRouterRef.current = new RemGarageAudioRouter();
+        }
+        const router = remGarageRouterRef.current;
+        router.setMasterVolume(masterVolume);
+        try {
+          await router.applyPayload(payload);
+          if (daily) {
+            const ok = await router.ensureCustomTrackPublishing(daily);
+            setCustomPublishing(router.isPublishing());
+            setCustomTrackError(ok ? null : "カスタムトラックを開始できませんでした");
+          }
+        } catch {
+          setCustomTrackError("音声ルーティングに失敗しました");
+        }
+        return;
+      }
+      applyRemGarageAudio(payload);
+      if (!daily) return;
+      try {
+        daily.sendAppMessage({ kind: "remGarageAudio", payload }, "*");
+      } catch {
+        /* ignore */
+      }
+    },
+    [isMusicAdmin, syncMode, masterVolume, daily, applyRemGarageAudio]
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem(GARAGE_SYNC_MODE_KEY, syncMode);
+  }, [syncMode]);
+
+  useEffect(() => {
+    const r = remGarageRouterRef.current;
+    if (!r || syncMode !== "customTrack") return;
+    r.setMasterVolume(masterVolume);
+  }, [masterVolume, syncMode]);
+
+  useEffect(() => {
+    if (!isMusicAdmin || !daily) return;
+    if (syncMode !== "htmlAudio") return;
+    void disposeRemGarageRouter();
+  }, [syncMode, isMusicAdmin, daily, disposeRemGarageRouter]);
+
+  useEffect(() => {
+    setIsMusicAdmin(readGarageMusicAdminSession());
+    if (typeof window === "undefined") return;
+    const bat = new URLSearchParams(window.location.search).get("bat");
+    if (!bat) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/garage-v2/verify-broadcast-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: bat }),
+        });
+        const j = (await r.json()) as { ok?: boolean };
+        if (cancelled || !j.ok) return;
+        writeGarageMusicAdminSession(true);
+        setIsMusicAdmin(true);
+        window.history.replaceState({}, "", `${window.location.pathname}${window.location.hash}`);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const canLocalScreenShare =
     typeof window !== "undefined" &&
-    !!(navigator.mediaDevices && (navigator.mediaDevices as any).getDisplayMedia);
+    !!(
+      navigator.mediaDevices &&
+      "getDisplayMedia" in navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getDisplayMedia === "function"
+    );
 
   const myDreamName = useMemo(
     () => resolvedName || displayName || "（未設定）",
@@ -215,7 +459,9 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
       setChatMessages([]);
       seenMessageIdsRef.current.clear();
       announcedJoinIdsRef.current.clear();
-    }, [])
+      clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+      void disposeRemGarageRouter();
+    }, [disposeRemGarageRouter])
   );
 
   useDailyEvent(
@@ -245,25 +491,41 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
 
   useDailyEvent(
     "app-message",
-    useCallback((ev: { data?: { id?: string; text?: string; fromName?: string } }) => {
-      const d = ev?.data;
-      if (!d || typeof d.text !== "string") return;
-      const bodyText: string = d.text;
-      const mid = typeof d.id === "string" && d.id ? d.id : null;
-      if (mid && seenMessageIdsRef.current.has(mid)) return;
-      if (mid) seenMessageIdsRef.current.add(mid);
-      const from =
-        typeof d?.fromName === "string" && d.fromName.trim() ? d.fromName.trim() : "guest";
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: mid ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          from,
-          text: bodyText,
-          timestamp: Date.now(),
-        },
-      ]);
-    }, [])
+    useCallback(
+      (ev: {
+        data?: unknown;
+        fromId?: string;
+      }) => {
+        const raw = ev?.data;
+        if (!raw || typeof raw !== "object") return;
+        const d = raw as Record<string, unknown>;
+        if (d.kind === "remGarageAudio" && d.payload && typeof d.payload === "object") {
+          const fromId = typeof ev.fromId === "string" ? ev.fromId : null;
+          if (fromId && localSessionId && fromId === localSessionId) {
+            return;
+          }
+          applyRemGarageAudio(d.payload as RemGarageAudioPayload);
+          return;
+        }
+        if (typeof d.text !== "string") return;
+        const bodyText: string = d.text;
+        const mid = typeof d.id === "string" && d.id ? d.id : null;
+        if (mid && seenMessageIdsRef.current.has(mid)) return;
+        if (mid) seenMessageIdsRef.current.add(mid);
+        const from =
+          typeof d?.fromName === "string" && d.fromName.trim() ? d.fromName.trim() : "guest";
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: mid ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            from,
+            text: bodyText,
+            timestamp: Date.now(),
+          },
+        ]);
+      },
+      [applyRemGarageAudio, localSessionId]
+    )
   );
 
   const handleJoin = async () => {
@@ -400,6 +662,8 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     setChatMessages([]);
     seenMessageIdsRef.current.clear();
     announcedJoinIdsRef.current.clear();
+    clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+    void disposeRemGarageRouter();
   };
 
   const handleToggleMute = () => {
@@ -526,7 +790,9 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
     setResolvedName(null);
     setChatInput("");
     setChatMessages([]);
-  }, [shouldForceClose, daily]);
+    clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+    void disposeRemGarageRouter();
+  }, [shouldForceClose, daily, disposeRemGarageRouter]);
 
   if (!hasJoined) {
     return (
@@ -797,6 +1063,28 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
         </span>
       </button>
 
+      {isMusicAdmin ? (
+        <GarageMusicAdminPanel
+          hasJoined={hasJoined && joined}
+          broadcastCfg={broadcastCfg}
+          onBroadcast={(p) => {
+            void broadcastRemGarageAudio(p);
+          }}
+          onUserInteract={() => {
+            /* 入室操作で多くのブラウザは音声が解放済み */
+          }}
+          syncMode={syncMode}
+          onSyncModeChange={(m) => {
+            setSyncMode(m);
+            setCustomTrackError(null);
+          }}
+          masterVolume={masterVolume}
+          onMasterVolumeChange={setMasterVolume}
+          customPublishing={customPublishing}
+          customTrackError={customTrackError}
+        />
+      ) : null}
+
       {/* 瞼の裏側ポップアップ（ロゴクリックで表示） */}
       {showShareOverlay && (
         <div
@@ -840,15 +1128,20 @@ function GarageV2Inner({ shouldForceClose }: { shouldForceClose: boolean }) {
 
 export default function GarageV2Client({
   shouldForceClose = false,
+  broadcastConfig,
 }: {
   shouldForceClose?: boolean;
+  broadcastConfig?: BroadcastConfig;
 }) {
+  const cfg = broadcastConfig ?? defaultBroadcastConfig;
   return (
     <DailyProvider url={GARAGE_ROOM_URL}>
       <div className="min-h-[100dvh] flex flex-col max-w-[960px] mx-auto">
         {/* リモート音声再生（これがないと相手の声が聞こえない） */}
         <DailyAudio />
-        <GarageV2Inner shouldForceClose={shouldForceClose} />
+        {/* 管理者の remMusic カスタムトラック（マイクとは別系統） */}
+        <GarageRemoteRemMusicAudio />
+        <GarageV2Inner shouldForceClose={shouldForceClose} broadcastCfg={cfg} />
       </div>
     </DailyProvider>
   );

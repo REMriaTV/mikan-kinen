@@ -65,12 +65,12 @@ export default function GarageV2Page() {
           wakeText={cfg.colorBar.wakeText}
         />
       )}
-      {viewMode === "live" && <GarageV2Client />}
+      {viewMode === "live" && <GarageV2Client broadcastConfig={cfg} />}
       {viewMode === "closed" && (
         <>
           {/* 休止画面を即表示しつつ、裏側でDailyを強制クローズ */}
           <div className="absolute inset-0 opacity-0 pointer-events-none">
-            <GarageV2Client shouldForceClose />
+            <GarageV2Client shouldForceClose broadcastConfig={cfg} />
           </div>
           <ColorBarScreen
             networkTitle={cfg.colorBar.networkTitle}
