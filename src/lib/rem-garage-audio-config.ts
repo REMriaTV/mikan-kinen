@@ -41,4 +41,6 @@ export type RemGarageAudioPayload =
       volume?: number;
     }
   | { t: "bgm"; action: "stopAll" }
-  | { t: "cue"; id: RemGarageCueId };
+  | { t: "cue"; id: RemGarageCueId }
+  /** 開局前ループ・OP・ED のいずれかが鳴っていればすべて停止 */
+  | { t: "cueStop" };

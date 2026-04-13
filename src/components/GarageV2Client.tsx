@@ -156,7 +156,8 @@ function ScreenShareVideo({
 
 function clearRemGarageLocalAudio(
   bgmMap: React.MutableRefObject<Partial<Record<string, HTMLAudioElement>>>,
-  cuePre: React.MutableRefObject<HTMLAudioElement | null>
+  cuePre: React.MutableRefObject<HTMLAudioElement | null>,
+  activeCueOneShots: React.MutableRefObject<Set<HTMLAudioElement>>
 ) {
   try {
     cuePre.current?.pause();
@@ -164,6 +165,15 @@ function clearRemGarageLocalAudio(
     /* ignore */
   }
   cuePre.current = null;
+  for (const el of activeCueOneShots.current) {
+    try {
+      el.pause();
+      el.currentTime = 0;
+    } catch {
+      /* ignore */
+    }
+  }
+  activeCueOneShots.current.clear();
   const m = bgmMap.current;
   for (const k of Object.keys(m)) {
     try {
@@ -218,6 +228,7 @@ function GarageV2Inner({
   const remGarageRouterRef = useRef<RemGarageAudioRouter | null>(null);
   const bgmAudioMapRef = useRef<Partial<Record<string, HTMLAudioElement>>>({});
   const cuePreAudioRef = useRef<HTMLAudioElement | null>(null);
+  const activeCueOneShotsRef = useRef<Set<HTMLAudioElement>>(new Set());
 
   const sePathById = useMemo(
     () => Object.fromEntries(REM_GARAGE_SE_TRACKS.map((s) => [s.id, s.path])) as Record<
@@ -229,6 +240,24 @@ function GarageV2Inner({
 
   const applyRemGarageAudio = useCallback(
     (p: RemGarageAudioPayload) => {
+      if (p.t === "cueStop") {
+        try {
+          cuePreAudioRef.current?.pause();
+        } catch {
+          /* ignore */
+        }
+        cuePreAudioRef.current = null;
+        for (const el of activeCueOneShotsRef.current) {
+          try {
+            el.pause();
+            el.currentTime = 0;
+          } catch {
+            /* ignore */
+          }
+        }
+        activeCueOneShotsRef.current.clear();
+        return;
+      }
       if (p.t === "se") {
         const path = sePathById[p.id];
         if (!path) return;
@@ -261,20 +290,46 @@ function GarageV2Inner({
               /* ignore */
             }
           }
+          cuePreAudioRef.current = null;
+          for (const el of activeCueOneShotsRef.current) {
+            try {
+              el.pause();
+              el.currentTime = 0;
+            } catch {
+              /* ignore */
+            }
+          }
+          activeCueOneShotsRef.current.clear();
           const a = new Audio(path);
           a.volume = 0.9;
+          activeCueOneShotsRef.current.add(a);
+          a.addEventListener(
+            "ended",
+            () => {
+              activeCueOneShotsRef.current.delete(a);
+            },
+            { once: true }
+          );
           a.play().catch(() => {});
           return;
         }
         if (p.id === "ending") {
           const a = new Audio(path);
           a.volume = 0.85;
+          activeCueOneShotsRef.current.add(a);
+          a.addEventListener(
+            "ended",
+            () => {
+              activeCueOneShotsRef.current.delete(a);
+            },
+            { once: true }
+          );
           a.play().catch(() => {});
         }
         return;
       }
       if (p.t === "bgm" && p.action === "stopAll") {
-        clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+        clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef, activeCueOneShotsRef);
         return;
       }
       if (p.t === "bgm" && "trackId" in p) {
@@ -459,7 +514,7 @@ function GarageV2Inner({
       setChatMessages([]);
       seenMessageIdsRef.current.clear();
       announcedJoinIdsRef.current.clear();
-      clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+      clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef, activeCueOneShotsRef);
       void disposeRemGarageRouter();
     }, [disposeRemGarageRouter])
   );
@@ -662,7 +717,7 @@ function GarageV2Inner({
     setChatMessages([]);
     seenMessageIdsRef.current.clear();
     announcedJoinIdsRef.current.clear();
-    clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+    clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef, activeCueOneShotsRef);
     void disposeRemGarageRouter();
   };
 
@@ -790,7 +845,7 @@ function GarageV2Inner({
     setResolvedName(null);
     setChatInput("");
     setChatMessages([]);
-    clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef);
+    clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef, activeCueOneShotsRef);
     void disposeRemGarageRouter();
   }, [shouldForceClose, daily, disposeRemGarageRouter]);
 

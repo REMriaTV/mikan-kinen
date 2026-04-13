@@ -193,15 +193,25 @@ export default function GarageMusicAdminPanel({
           </div>
 
           <div className="space-y-2 mb-2">
-            <button
-              type="button"
-              className="w-full text-left px-2 py-1.5 rounded border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.04)]"
-              onClick={() =>
-                wrapInteract(() => onBroadcast({ t: "cue", id: "pre-broadcast" }))
-              }
-            >
-              ▶ 開局前BGM（手動）
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="flex-1 text-left px-2 py-1.5 rounded border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.04)]"
+                onClick={() =>
+                  wrapInteract(() => onBroadcast({ t: "cue", id: "pre-broadcast" }))
+                }
+              >
+                ▶ 開局前BGM（手動）
+              </button>
+              <button
+                type="button"
+                className="shrink-0 px-2 py-1.5 rounded border border-[rgba(224,90,51,0.35)] text-[rgba(224,90,51,0.9)] hover:bg-[rgba(224,90,51,0.08)]"
+                title="開局前・OP・ED をすべて停止"
+                onClick={() => wrapInteract(() => onBroadcast({ t: "cueStop" }))}
+              >
+                停止
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <label className="text-[0.65rem] text-[rgba(232,228,223,0.5)] shrink-0">BGM</label>
               <select
@@ -259,9 +269,10 @@ export default function GarageMusicAdminPanel({
             <button
               type="button"
               className="w-full px-2 py-1 rounded border border-[rgba(255,255,255,0.08)] text-[0.65rem] text-[rgba(232,228,223,0.5)]"
+              title="ループBGMに加え、開局前・OP・ED も停止します"
               onClick={() => wrapInteract(() => onBroadcast({ t: "bgm", action: "stopAll" }))}
             >
-              全 BGM 停止
+              全 BGM 停止（キュー音も含む）
             </button>
           </div>
 
@@ -294,6 +305,14 @@ export default function GarageMusicAdminPanel({
               onClick={() => wrapInteract(() => onBroadcast({ t: "cue", id: "ending" }))}
             >
               ED 再生
+            </button>
+            <button
+              type="button"
+              className="flex-1 py-1.5 rounded border border-[rgba(224,90,51,0.4)] text-[0.65rem] text-[rgba(224,90,51,0.95)] hover:bg-[rgba(224,90,51,0.1)]"
+              title="OP・ED・開局前ループを停止"
+              onClick={() => wrapInteract(() => onBroadcast({ t: "cueStop" }))}
+            >
+              OP/ED 停止
             </button>
           </div>
 

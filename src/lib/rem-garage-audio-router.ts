@@ -25,6 +25,8 @@ export class RemGarageAudioRouter {
 
   private bgmEls = new Map<string, HTMLAudioElement>();
   private cuePreEl: HTMLAudioElement | null = null;
+  /** OP / ED などワンショット（複数回連打で重なる分も追跡） */
+  private readonly activeCueOneShots = new Set<HTMLAudioElement>();
 
   constructor() {
     const ctx = new AudioContext();
@@ -113,8 +115,38 @@ export class RemGarageAudioRouter {
     }
   }
 
+  private stopActiveCueOneShots(): void {
+    for (const el of this.activeCueOneShots) {
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch {
+        /* ignore */
+      }
+    }
+    this.activeCueOneShots.clear();
+  }
+
+  private registerCueOneShot(el: HTMLAudioElement): void {
+    this.activeCueOneShots.add(el);
+    el.addEventListener(
+      "ended",
+      () => {
+        this.activeCueOneShots.delete(el);
+      },
+      { once: true }
+    );
+  }
+
   async applyPayload(p: RemGarageAudioPayload): Promise<void> {
     await this.resume();
+
+    if (p.t === "cueStop") {
+      this.stopCuePre();
+      this.cuePreEl = null;
+      this.stopActiveCueOneShots();
+      return;
+    }
 
     if (p.t === "se") {
       const path = sePathById[p.id];
@@ -156,10 +188,13 @@ export class RemGarageAudioRouter {
       }
       if (p.id === "opening") {
         this.stopCuePre();
+        this.cuePreEl = null;
+        this.stopActiveCueOneShots();
         const el = new Audio(path);
         el.crossOrigin = "anonymous";
         const src = this.context.createMediaElementSource(el);
         src.connect(this.gains.music);
+        this.registerCueOneShot(el);
         el.addEventListener(
           "ended",
           () => {
@@ -179,6 +214,7 @@ export class RemGarageAudioRouter {
         el.crossOrigin = "anonymous";
         const src = this.context.createMediaElementSource(el);
         src.connect(this.gains.music);
+        this.registerCueOneShot(el);
         el.addEventListener(
           "ended",
           () => {
@@ -199,6 +235,7 @@ export class RemGarageAudioRouter {
       this.stopAllBgmElements();
       this.stopCuePre();
       this.cuePreEl = null;
+      this.stopActiveCueOneShots();
       return;
     }
 
