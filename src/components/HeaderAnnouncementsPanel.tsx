@@ -33,13 +33,15 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
   const showListLink = Boolean(latest.link_url?.trim());
 
   const inner = (
-    <>
-      <p className="text-[0.58rem] tracking-[0.35em] uppercase text-[rgba(232,228,223,0.55)] mb-1">
-        News
-      </p>
-      <p className="text-[0.68rem] text-gold/90 font-mono tracking-[0.06em] mb-0.5">
-        {formatAnnouncementDate(latest.published_at)}
-      </p>
+    <div className="text-right">
+      <div className="flex items-center justify-end gap-2 mb-1">
+        <p className="text-[0.58rem] tracking-[0.35em] uppercase text-[rgba(232,228,223,0.55)]">
+          News
+        </p>
+        <p className="text-[0.68rem] text-gold/90 font-mono tracking-[0.06em]">
+          {formatAnnouncementDate(latest.published_at)}
+        </p>
+      </div>
       <p className="font-shippori text-[0.88rem] text-[#E8E4DF] leading-snug">
         {latest.title}
       </p>
@@ -48,14 +50,14 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
           {latest.summary}
         </p>
       ) : null}
-    </>
+    </div>
   );
 
   const cardClass =
-    "block w-full text-left rounded-sm border border-[rgba(255,255,255,0.12)] bg-[rgba(0,0,0,0.35)] px-3 py-2.5 md:px-4 md:py-3 hover:border-[rgba(224,180,90,0.4)] hover:bg-[rgba(255,255,255,0.05)] transition-colors";
+    "block w-full rounded-sm border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.04)] px-3 py-2.5 md:px-4 md:py-3 hover:border-gold hover:bg-[rgba(255,255,255,0.06)] transition-colors";
 
   return (
-    <div className="w-full min-w-0 md:max-w-none">
+    <div className="w-full min-w-0 md:w-fit md:min-w-[22rem] md:max-w-[min(100%,34rem)] md:ml-auto">
       {external ? (
         <a
           href={href}
