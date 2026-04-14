@@ -26,6 +26,11 @@ export default function AdminNegotoClient({ token }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  /** アップロード結果（画面上に表示。alert に頼らない） */
+  const [uploadFeedback, setUploadFeedback] = useState<{
+    kind: "ok" | "err";
+    text: string;
+  } | null>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -69,6 +74,7 @@ export default function AdminNegotoClient({ token }: Props) {
     setFTopic("");
     setFBody("");
     setIsPublished(false);
+    setUploadFeedback(null);
     setModalOpen(true);
   }
 
@@ -81,6 +87,7 @@ export default function AdminNegotoClient({ token }: Props) {
     setFTopic(e.topic ?? "");
     setFBody(e.body);
     setIsPublished(e.published);
+    setUploadFeedback(null);
     setModalOpen(true);
   }
 
@@ -146,7 +153,11 @@ export default function AdminNegotoClient({ token }: Props) {
   }
 
   async function uploadNegotoImage(file: File) {
+    setUploadFeedback(null);
     setUploadingImage(true);
+    const UPLOAD_MS = 90_000;
+    const ac = new AbortController();
+    const timer = window.setTimeout(() => ac.abort(), UPLOAD_MS);
     try {
       const fd = new FormData();
       fd.append("token", token);
@@ -154,14 +165,24 @@ export default function AdminNegotoClient({ token }: Props) {
       const res = await fetch("/api/admin/negoto-upload", {
         method: "POST",
         body: fd,
+        signal: ac.signal,
       });
-      const json = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-        publicUrl?: string;
-      };
+      const raw = await res.text();
+      let json: { ok?: boolean; error?: string; publicUrl?: string };
+      try {
+        json = JSON.parse(raw) as typeof json;
+      } catch {
+        setUploadFeedback({
+          kind: "err",
+          text: `サーバー応答を解釈できませんでした（HTTP ${res.status}）。ページを再読み込みしてからもう一度試してください。`,
+        });
+        return;
+      }
       if (!res.ok || !json.ok || !json.publicUrl) {
-        window.alert(json.error ?? "アップロードに失敗しました");
+        setUploadFeedback({
+          kind: "err",
+          text: json.error ?? `アップロードに失敗しました（HTTP ${res.status}）`,
+        });
         return;
       }
       const base =
@@ -177,13 +198,25 @@ export default function AdminNegotoClient({ token }: Props) {
           ta.focus();
           const pos = start + insert.length;
           ta.setSelectionRange(pos, pos);
+          ta.scrollIntoView({ block: "nearest", behavior: "smooth" });
         });
       } else {
         setFBody((prev) => (prev ? `${prev}\n${insert}` : insert));
       }
-    } catch {
-      window.alert("アップロードに失敗しました");
+      setUploadFeedback({
+        kind: "ok",
+        text: "アップロードできました。下の「本文」欄に画像用の1行が追加されています。そのまま「保存」で公開ページに反映されます。",
+      });
+    } catch (e) {
+      const aborted = e instanceof Error && e.name === "AbortError";
+      setUploadFeedback({
+        kind: "err",
+        text: aborted
+          ? "時間がかかりすぎたため中断しました。通信状況を確認して、もう一度お試しください。"
+          : "アップロード中にエラーが発生しました。もう一度お試しください。",
+      });
     } finally {
+      window.clearTimeout(timer);
       setUploadingImage(false);
       if (imageFileInputRef.current) imageFileInputRef.current.value = "";
     }
@@ -381,10 +414,21 @@ export default function AdminNegotoClient({ token }: Props) {
                   : "画像をアップロード（Supabase）"}
               </button>
               <span className="negoto-form-help-inline">
-                カーソル位置に{" "}
-                <code>![ファイル名](公開URL)</code> を挿入します（再デプロイ不要）
+                選んだ画像をクラウドに保存し、下の本文欄へ自動で1行追加します（公開ページではそのまま画像表示）。
               </span>
             </div>
+            {uploadFeedback ? (
+              <p
+                className={
+                  uploadFeedback.kind === "ok"
+                    ? "negoto-upload-feedback negoto-upload-feedback-ok"
+                    : "negoto-upload-feedback negoto-upload-feedback-err"
+                }
+                role="status"
+              >
+                {uploadFeedback.text}
+              </p>
+            ) : null}
             <div className="negoto-form-help">
               チャプター区切りには --- を使用。見出しには ## を使用。
               画像は上のボタンか、1行に{" "}
@@ -523,6 +567,9 @@ export default function AdminNegotoClient({ token }: Props) {
 .negoto-form-upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 8px; }
 .negoto-form-help-inline { font-size: 11px; color: rgba(232,228,223,0.35); font-family: "Courier New", monospace; }
 .negoto-form-upload-row .negoto-btn:disabled { opacity: 0.5; cursor: wait; }
+.negoto-upload-feedback { font-size: 12px; line-height: 1.7; margin: 0 0 10px 0; padding: 10px 12px; border-radius: 4px; }
+.negoto-upload-feedback-ok { color: rgba(160, 220, 180, 0.95); background: rgba(100, 200, 150, 0.1); border: 1px solid rgba(100, 200, 150, 0.2); }
+.negoto-upload-feedback-err { color: rgba(240, 180, 170, 0.95); background: rgba(200, 80, 60, 0.12); border: 1px solid rgba(200, 80, 60, 0.25); }
 .negoto-empty-state { text-align: center; padding: 4rem 0; color: rgba(232,228,223,0.2); font-size: 14px; }
 .negoto-confirm-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 200; justify-content: center; align-items: center; }
 .negoto-confirm-overlay.negoto-modal-active { display: flex; }
