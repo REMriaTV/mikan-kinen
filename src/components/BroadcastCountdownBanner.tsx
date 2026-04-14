@@ -10,6 +10,7 @@ import {
   formatMinogashiBannerLinkText,
   type BroadcastConfig,
 } from "@/lib/broadcast-config";
+import { MINOGASHI_SECTION_DOM_ID } from "@/lib/minogashi-layout";
 
 function formatCountdown(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -69,16 +70,83 @@ export default function BroadcastCountdownBanner({
   const minogashiBannerLinkText = formatMinogashiBannerLinkText(
     cfg.topPage.minogashiHeroBadgeLead
   );
+  const scrollToMinogashi = () => {
+    document
+      .getElementById(MINOGASHI_SECTION_DOM_ID)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <section className="bg-[#0D0F12] text-[#E8E4DF] border-b border-[rgba(255,255,255,0.06)]">
       <div className="max-w-[960px] mx-auto px-4 py-3 md:px-6 md:py-8 space-y-2.5 md:space-y-4">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2.5 md:gap-4">
-          <div className="space-y-1 md:space-y-2">
-            <p className="text-[0.58rem] md:text-[0.65rem] tracking-[0.35em] md:tracking-[0.45em] uppercase text-[rgba(232,228,223,0.65)]">
+        <div className="md:hidden space-y-1.5">
+          <p className="text-[0.58rem] tracking-[0.35em] uppercase text-[rgba(232,228,223,0.65)]">
+            {cfg.countdown.broadcastLabel}
+          </p>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 items-start">
+            <div className="min-w-0 space-y-0.5">
+              <div className="font-shippori font-bold text-[clamp(0.95rem,4.8vw,1.32rem)] leading-[1.15]">
+                {isLive ? (
+                  <span className="text-gold">{cfg.countdown.nowChanneling}</span>
+                ) : (
+                  <span>
+                    {mounted ? (
+                      <>
+                        {cfg.countdown.countdownPrefix} {countdown.days}日{" "}
+                        {countdown.hours}時間 {countdown.minutes}分{" "}
+                        {countdown.seconds}秒 {cfg.countdown.countdownSuffix}
+                      </>
+                    ) : (
+                      <>
+                        {cfg.countdown.countdownPrefix} --日 --時間 --分 --秒{" "}
+                        {cfg.countdown.countdownSuffix}
+                      </>
+                    )}
+                  </span>
+                )}
+              </div>
+              <div className="text-[0.8rem] text-[rgba(232,228,223,0.86)] leading-[1.5]">
+                {cfg.countdown.eventDate}
+              </div>
+              <div className="text-[0.8rem] text-[rgba(232,228,223,0.86)] leading-[1.5]">
+                {cfg.countdown.eventTagline}
+              </div>
+            </div>
+
+            <div className="text-right min-w-[9.2rem] space-y-0.5">
+              <Link
+                href="/garage-v2"
+                className={
+                  "inline-block text-[0.72rem] tracking-[0.18em] px-3 py-1.5 border transition-all " +
+                  (isLive
+                    ? "bg-gold text-deep border-gold hover:bg-transparent hover:text-gold"
+                    : "bg-[rgba(255,255,255,0.04)] text-[#E8E4DF] border-[rgba(255,255,255,0.18)] hover:border-gold")
+                }
+              >
+                ▶ REM CHAT
+              </Link>
+              <div className="text-[0.68rem] text-[rgba(232,228,223,0.65)] leading-snug">
+                5分前に開局
+              </div>
+              {showMinogashiBannerCta ? (
+                <button
+                  type="button"
+                  onClick={scrollToMinogashi}
+                  className="text-[11px] leading-snug tracking-[0.05em] text-[#E05A33] underline-offset-2 hover:opacity-70 hover:underline transition-opacity"
+                >
+                  ▶ 前回の放送を観る ↓
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden md:flex md:flex-row md:items-end md:justify-between gap-4">
+          <div className="space-y-2">
+            <p className="text-[0.65rem] tracking-[0.45em] uppercase text-[rgba(232,228,223,0.65)]">
               {cfg.countdown.broadcastLabel}
             </p>
-            <div className="font-shippori font-bold text-[clamp(0.95rem,4.8vw,1.32rem)] md:text-[clamp(1.2rem,3vw,1.8rem)] leading-[1.15] md:leading-tight">
+            <div className="font-shippori font-bold text-[clamp(1.2rem,3vw,1.8rem)] leading-tight">
               {isLive ? (
                 <span className="text-gold">{cfg.countdown.nowChanneling}</span>
               ) : (
@@ -98,17 +166,13 @@ export default function BroadcastCountdownBanner({
                 </span>
               )}
             </div>
-            <div className="mt-1.5 space-y-0.5 text-[0.8rem] text-[rgba(232,228,223,0.86)] leading-[1.5] md:hidden">
-              <div>{cfg.countdown.eventDate}</div>
-              <div>{cfg.countdown.eventTagline}</div>
-            </div>
           </div>
 
-          <div className="md:text-right space-y-1 md:space-y-2">
+          <div className="md:text-right space-y-2">
             <Link
               href="/garage-v2"
               className={
-                "inline-block w-full text-center md:w-auto md:text-left text-[0.72rem] md:text-[0.8rem] tracking-[0.18em] md:tracking-[0.25em] px-4 py-2 md:px-6 md:py-3 border transition-all " +
+                "inline-block text-[0.8rem] tracking-[0.25em] px-6 py-3 border transition-all " +
                 (isLive
                   ? "bg-gold text-deep border-gold hover:bg-transparent hover:text-gold"
                   : "bg-[rgba(255,255,255,0.04)] text-[#E8E4DF] border-[rgba(255,255,255,0.18)] hover:border-gold")
@@ -116,7 +180,7 @@ export default function BroadcastCountdownBanner({
             >
               ▶ {isLive ? cfg.countdown.remChatLabelAfter : cfg.countdown.remChatLabelBefore}
             </Link>
-            <div className="text-[0.68rem] md:text-[0.75rem] text-[rgba(232,228,223,0.65)] leading-snug">
+            <div className="text-[0.75rem] text-[rgba(232,228,223,0.65)] leading-snug">
               {isLive ? cfg.countdown.remChatNoteAfter : cfg.countdown.remChatNoteBefore}
             </div>
             {showMinogashiBannerCta ? (
