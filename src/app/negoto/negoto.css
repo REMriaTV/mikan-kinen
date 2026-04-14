@@ -436,6 +436,19 @@
   margin-bottom: 0;
 }
 
+.negoto-entry-figure {
+  margin: 0;
+}
+
+.negoto-entry-figure img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid rgba(232, 228, 223, 0.08);
+}
+
 .negoto-scroll-reveal.negoto-zzz-block {
   margin-bottom: 2.5rem;
 }

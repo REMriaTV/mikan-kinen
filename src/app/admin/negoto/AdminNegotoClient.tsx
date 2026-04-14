@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { NEGOTO_AUTHORS, type NegotoEntryRow } from "@/lib/negoto";
 
 type Props = { token: string };
@@ -25,6 +25,9 @@ export default function AdminNegotoClient({ token }: Props) {
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const imageFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,6 +142,50 @@ export default function AdminNegotoClient({ token }: Props) {
       await load();
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function uploadNegotoImage(file: File) {
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("token", token);
+      fd.append("file", file);
+      const res = await fetch("/api/admin/negoto-upload", {
+        method: "POST",
+        body: fd,
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        publicUrl?: string;
+      };
+      if (!res.ok || !json.ok || !json.publicUrl) {
+        window.alert(json.error ?? "アップロードに失敗しました");
+        return;
+      }
+      const base =
+        file.name.replace(/\.[^.]+$/, "").replace(/[_\s]+/g, " ").trim() ||
+        "画像";
+      const insert = `![${base}](${json.publicUrl})\n`;
+      const ta = bodyTextareaRef.current;
+      if (ta) {
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        setFBody((prev) => prev.slice(0, start) + insert + prev.slice(end));
+        requestAnimationFrame(() => {
+          ta.focus();
+          const pos = start + insert.length;
+          ta.setSelectionRange(pos, pos);
+        });
+      } else {
+        setFBody((prev) => (prev ? `${prev}\n${insert}` : insert));
+      }
+    } catch {
+      window.alert("アップロードに失敗しました");
+    } finally {
+      setUploadingImage(false);
+      if (imageFileInputRef.current) imageFileInputRef.current.value = "";
     }
   }
 
@@ -303,14 +350,52 @@ export default function AdminNegotoClient({ token }: Props) {
 
           <div className="negoto-form-group">
             <label className="negoto-form-label">本文</label>
+            <input
+              ref={imageFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
+              className="negoto-file-input-hidden"
+              aria-hidden
+              tabIndex={-1}
+              onChange={(ev) => {
+                const f = ev.target.files?.[0];
+                if (f) void uploadNegotoImage(f);
+              }}
+            />
             <textarea
+              ref={bodyTextareaRef}
               className="negoto-form-textarea"
               value={fBody}
               onChange={(ev) => setFBody(ev.target.value)}
               placeholder="砂浜に枝で書くように..."
             />
+            <div className="negoto-form-upload-row">
+              <button
+                type="button"
+                className="negoto-btn negoto-btn-sm"
+                disabled={uploadingImage}
+                onClick={() => imageFileInputRef.current?.click()}
+              >
+                {uploadingImage
+                  ? "画像をアップロード中…"
+                  : "画像をアップロード（Supabase）"}
+              </button>
+              <span className="negoto-form-help-inline">
+                カーソル位置に{" "}
+                <code>![ファイル名](公開URL)</code> を挿入します（再デプロイ不要）
+              </span>
+            </div>
             <div className="negoto-form-help">
               チャプター区切りには --- を使用。見出しには ## を使用。
+              画像は上のボタンか、1行に{" "}
+              <code style={{ fontSize: "11px", opacity: 0.7 }}>
+                ![説明](https://…)
+              </code>{" "}
+              または{" "}
+              <code style={{ fontSize: "11px", opacity: 0.7 }}>
+                ![](/images/…)
+              </code>
+              （https または / で始まるパスのみ）
             </div>
           </div>
 
@@ -434,6 +519,10 @@ export default function AdminNegotoClient({ token }: Props) {
 .negoto-toggle-track.negoto-toggle-on .negoto-toggle-thumb { left: 18px; background: rgba(100,200,150,0.9); }
 .negoto-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(232,228,223,0.06); }
 .negoto-form-help { font-size: 11px; color: rgba(232,228,223,0.2); margin-top: 4px; font-family: "Courier New", monospace; }
+.negoto-file-input-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+.negoto-form-upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 8px; }
+.negoto-form-help-inline { font-size: 11px; color: rgba(232,228,223,0.35); font-family: "Courier New", monospace; }
+.negoto-form-upload-row .negoto-btn:disabled { opacity: 0.5; cursor: wait; }
 .negoto-empty-state { text-align: center; padding: 4rem 0; color: rgba(232,228,223,0.2); font-size: 14px; }
 .negoto-confirm-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 200; justify-content: center; align-items: center; }
 .negoto-confirm-overlay.negoto-modal-active { display: flex; }

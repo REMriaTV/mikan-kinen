@@ -109,11 +109,27 @@ export default function NegotoEntryClient({
                 <h2>{b.h2}</h2>
               </div>
             ) : null}
-            {b.paragraphs.map((p, j) => (
-              <div key={j} className="negoto-scroll-reveal">
-                <p>{p}</p>
-              </div>
-            ))}
+            {b.paragraphs.map((p, j) =>
+              typeof p === "string" ? (
+                <div key={j} className="negoto-scroll-reveal">
+                  <p>{p}</p>
+                </div>
+              ) : (
+                <div
+                  key={j}
+                  className="negoto-scroll-reveal negoto-entry-figure-wrap"
+                >
+                  <figure className="negoto-entry-figure">
+                    <img
+                      src={p.src}
+                      alt={p.alt}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </figure>
+                </div>
+              )
+            )}
           </div>
         );
       })}

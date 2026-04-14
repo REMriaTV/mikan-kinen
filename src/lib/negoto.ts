@@ -24,10 +24,18 @@ export type NegotoEntryRow = {
   updated_at: string;
 };
 
+/** 本文1行ぶんの画像（Markdown `![alt](url)` から生成） */
+export type NegotoBodyImage = {
+  kind: "image";
+  src: string;
+  alt: string;
+};
+
 export type NegotoSectionBlock = {
   kind: "section";
   h2?: string;
-  paragraphs: string[];
+  /** 段落テキストまたは画像ブロック（上から順） */
+  paragraphs: (string | NegotoBodyImage)[];
 };
 
 export type NegotoZzzBlock = {
@@ -37,7 +45,30 @@ export type NegotoZzzBlock = {
 
 export type NegotoParsedBlock = NegotoSectionBlock | NegotoZzzBlock;
 
-/** `---` 区切り・`##` 見出し・空行段落をパース */
+const MD_IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)]+)\)\s*$/;
+
+/**
+ * コラム本文に埋め込む画像 URL を制限する。
+ * - `https://...` のみ（外部）
+ * - 同一サイトのパス `/...` のみ
+ */
+export function sanitizeNegotoImageSrc(raw: string): string | null {
+  const s = raw.trim();
+  if (!s) return null;
+  if (s.startsWith("/")) {
+    if (s.startsWith("//")) return null;
+    return s;
+  }
+  try {
+    const u = new URL(s);
+    if (u.protocol === "https:") return u.toString();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** `---` 区切り・`##` 見出し・空行段落・`![alt](url)` 画像行をパース */
 export function parseNegotoBody(raw: string): NegotoParsedBlock[] {
   const trimmed = raw.trim();
   if (!trimmed) return [];
@@ -89,6 +120,21 @@ function parseNegotoSegment(segment: string): NegotoParsedBlock[] {
       flushParagraph();
       continue;
     }
+    const imgM = MD_IMAGE_LINE.exec(line);
+    if (imgM) {
+      flushParagraph();
+      const src = sanitizeNegotoImageSrc(imgM[2]);
+      if (src) {
+        current.paragraphs.push({
+          kind: "image",
+          src,
+          alt: imgM[1].trim(),
+        });
+      } else {
+        paraLines.push(line.trimEnd());
+      }
+      continue;
+    }
     paraLines.push(line.trimEnd());
   }
 
@@ -106,6 +152,7 @@ export function excerptFromBody(body: string, maxLines = 3): string {
   const taken: string[] = [];
   for (const line of lines) {
     if (!line || line === "---" || /^##\s/.test(line)) continue;
+    if (MD_IMAGE_LINE.test(line)) continue;
     taken.push(line);
     if (taken.length >= maxLines) break;
   }
