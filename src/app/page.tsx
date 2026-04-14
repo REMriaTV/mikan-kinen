@@ -1,10 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import BroadcastCountdownBanner from "@/components/BroadcastCountdownBanner";
-import HomeAnnouncements from "@/components/HomeAnnouncements";
 import MinogashiHeroBadge from "@/components/MinogashiHeroBadge";
 import MinogashiSection from "@/components/MinogashiSection";
-import { homeAnnouncements } from "@/data/home-announcements";
 import {
   defaultBroadcastConfig,
   formatMinogashiHeroBadgeText,
@@ -48,7 +46,6 @@ export default async function Home() {
   return (
     <main>
       <BroadcastCountdownBanner />
-      <HomeAnnouncements items={homeAnnouncements} />
       {/* HERO */}
       <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 py-20 relative">
         <p className="text-[0.7rem] tracking-[0.4em] uppercase text-dim mb-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>
