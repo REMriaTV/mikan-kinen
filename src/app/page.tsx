@@ -50,13 +50,10 @@ export default async function Home() {
     <main>
       <BroadcastCountdownBanner announcements={announcements} />
       {/* HERO */}
-      <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 py-20 relative">
+      <section className="min-h-0 md:min-h-screen flex flex-col justify-start md:justify-center items-center text-center px-6 pt-8 pb-12 md:py-20 relative">
         <p className="text-[0.7rem] tracking-[0.4em] uppercase text-dim mb-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>
           <span className="text-gold">▶</span> レムリアテレビ意識波息株式会社　特別番組
         </p>
-        <div className="inline-block border border-gold text-gold text-[0.65rem] tracking-[0.35em] px-5 py-1.5 mb-10 animate-fade-in" style={{ animationDelay: "0.6s" }}>
-          {cfg.topPage.heroDateBadge}
-        </div>
         <h1 className="font-shippori font-extrabold text-[clamp(1.8rem,5vw,3.2rem)] leading-tight mb-2 animate-fade-in" style={{ animationDelay: "0.9s" }}>
           【未完記念トークショー】<br />百面惣 ～育まれるもの～
         </h1>
@@ -105,7 +102,7 @@ export default async function Home() {
             </Link>
           </div>
         ) : null}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float" style={{ animationDelay: "2.5s" }}>
+        <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 animate-float" style={{ animationDelay: "2.5s" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" fill="none" className="text-dim">
             <path d="M12 5v14M5 12l7 7 7-7" />
           </svg>

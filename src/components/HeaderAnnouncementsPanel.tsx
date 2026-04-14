@@ -34,7 +34,7 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
 
   const inner = (
     <div className="text-right">
-      <div className="flex items-center justify-end gap-2 mb-1">
+      <div className="hidden md:flex items-center justify-end gap-2 mb-1">
         <p className="text-[0.58rem] tracking-[0.35em] uppercase text-[rgba(232,228,223,0.55)]">
           News
         </p>
@@ -42,11 +42,22 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
           {formatAnnouncementDate(latest.published_at)}
         </p>
       </div>
-      <p className="font-shippori text-[0.82rem] md:text-[0.88rem] text-[#E8E4DF] leading-snug">
+      <div className="md:hidden flex items-baseline justify-end gap-2 mb-0.5">
+        <p className="text-[0.56rem] tracking-[0.28em] uppercase text-[rgba(232,228,223,0.55)]">
+          News
+        </p>
+        <p className="text-[0.64rem] text-gold/90 font-mono tracking-[0.04em]">
+          {formatAnnouncementDate(latest.published_at)}
+        </p>
+        <p className="font-shippori text-[0.9rem] text-[#E8E4DF] leading-snug">
+          {latest.title}
+        </p>
+      </div>
+      <p className="hidden md:block font-shippori text-[0.88rem] text-[#E8E4DF] leading-snug">
         {latest.title}
       </p>
       {latest.summary ? (
-        <p className="text-[0.68rem] md:text-[0.72rem] text-[rgba(232,228,223,0.72)] mt-1 md:mt-1.5 leading-relaxed">
+        <p className="hidden md:block text-[0.72rem] text-[rgba(232,228,223,0.72)] mt-1.5 leading-relaxed">
           {latest.summary}
         </p>
       ) : null}
