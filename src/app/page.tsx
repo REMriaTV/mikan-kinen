@@ -9,6 +9,7 @@ import {
   normalizeBroadcastConfig,
   type BroadcastConfig,
 } from "@/lib/broadcast-config";
+import { getPublishedSiteAnnouncements } from "@/lib/site-announcements";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ async function loadBroadcastConfig(): Promise<BroadcastConfig> {
 
 export default async function Home() {
   const cfg = await loadBroadcastConfig();
+  const announcements = await getPublishedSiteAnnouncements();
   const showMinogashi =
     cfg.topPage.minogashiVisible && cfg.topPage.minogashiYoutubeId.trim() !== "";
   const minogashiHeroBadgeText = formatMinogashiHeroBadgeText(
@@ -45,7 +47,7 @@ export default async function Home() {
   );
   return (
     <main>
-      <BroadcastCountdownBanner />
+      <BroadcastCountdownBanner announcements={announcements} />
       {/* HERO */}
       <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 py-20 relative">
         <p className="text-[0.7rem] tracking-[0.4em] uppercase text-dim mb-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>

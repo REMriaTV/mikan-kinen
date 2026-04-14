@@ -2,7 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import HeaderAnnouncementsPanel from "@/components/HeaderAnnouncementsPanel";
 import MinogashiBannerCta from "@/components/MinogashiBannerCta";
+import type { SiteAnnouncementRow } from "@/lib/site-announcements";
 import {
   defaultBroadcastConfig,
   formatMinogashiBannerLinkText,
@@ -18,7 +20,13 @@ function formatCountdown(ms: number) {
   return { days, hours, minutes, seconds };
 }
 
-export default function BroadcastCountdownBanner() {
+type Props = {
+  announcements?: SiteAnnouncementRow[];
+};
+
+export default function BroadcastCountdownBanner({
+  announcements = [],
+}: Props) {
   const [mounted, setMounted] = useState(false);
   const [cfg, setCfg] = useState<BroadcastConfig>(defaultBroadcastConfig);
   // SSR と hydration 初期を一致させるため、Date.now() は描画に使わない
@@ -118,6 +126,9 @@ export default function BroadcastCountdownBanner() {
             <div>{cfg.countdown.eventDate}</div>
             <div>{cfg.countdown.eventTagline}</div>
           </div>
+          {announcements.length > 0 ? (
+            <HeaderAnnouncementsPanel items={announcements} />
+          ) : null}
         </div>
       </div>
     </section>
