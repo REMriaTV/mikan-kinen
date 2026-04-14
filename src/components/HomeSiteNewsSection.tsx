@@ -30,7 +30,7 @@ export default function HomeSiteNewsSection({ items }: Props) {
         News
       </p>
       <h2 className="font-shippori font-bold text-[clamp(1.2rem,3vw,1.6rem)] mb-2 text-secondary">
-        お目覚めのしらせ
+        目覚めのお知らせ
       </h2>
       <p className="text-[0.82rem] text-dim mb-8 leading-relaxed">
         夢の入口で拾った小さな気配を、ここに記していきます。
