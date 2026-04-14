@@ -3,13 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import type { NegotoParsedBlock } from "@/lib/negoto";
+import {
+  parseNegotoBoldSegments,
+  type NegotoParsedBlock,
+} from "@/lib/negoto";
 
 type Props = {
   blocks: NegotoParsedBlock[];
   newerSlug: string | null;
   olderSlug: string | null;
 };
+
+function NegotoInlineText({ text }: { text: string }) {
+  const pieces = parseNegotoBoldSegments(text);
+  return (
+    <>
+      {pieces.map((piece, idx) =>
+        piece.kind === "bold" ? (
+          <strong key={idx}>{piece.text}</strong>
+        ) : (
+          <span key={idx}>{piece.text}</span>
+        )
+      )}
+    </>
+  );
+}
 
 export default function NegotoEntryClient({
   blocks,
@@ -106,13 +124,17 @@ export default function NegotoEntryClient({
           <div key={`s-${i}`} className="negoto-section-group">
             {b.h2 ? (
               <div className="negoto-scroll-reveal">
-                <h2>{b.h2}</h2>
+                <h2>
+                  <NegotoInlineText text={b.h2} />
+                </h2>
               </div>
             ) : null}
             {b.paragraphs.map((p, j) =>
               typeof p === "string" ? (
                 <div key={j} className="negoto-scroll-reveal">
-                  <p>{p}</p>
+                  <p>
+                    <NegotoInlineText text={p} />
+                  </p>
                 </div>
               ) : (
                 <div

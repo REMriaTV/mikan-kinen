@@ -436,7 +436,9 @@ export default function AdminNegotoClient({ token }: Props) {
               </p>
             ) : null}
             <div className="negoto-form-help">
-              チャプター区切りには --- を使用。見出しには ## を使用。
+              チャプター区切りには --- を使用。見出しには ## を使用。{" "}
+              <code style={{ fontSize: "11px", opacity: 0.7 }}>**太字**</code>{" "}
+              で囲むと太字になります。
               画像は上のボタンか、1行に{" "}
               <code style={{ fontSize: "11px", opacity: 0.7 }}>
                 ![説明](https://…)

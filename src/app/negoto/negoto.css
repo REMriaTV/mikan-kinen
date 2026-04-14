@@ -436,6 +436,12 @@
   margin-bottom: 0;
 }
 
+.negoto-scroll-reveal p strong,
+.negoto-scroll-reveal h2 strong {
+  font-weight: 600;
+  color: rgba(232, 228, 223, 0.95);
+}
+
 .negoto-entry-figure {
   margin: 0;
 }

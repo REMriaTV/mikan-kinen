@@ -45,7 +45,30 @@ export type NegotoZzzBlock = {
 
 export type NegotoParsedBlock = NegotoSectionBlock | NegotoZzzBlock;
 
+/** 段落・見出し内の `**太字**` を表すフラットな断片 */
+export type NegotoInlinePiece =
+  | { kind: "text"; text: string }
+  | { kind: "bold"; text: string };
+
 const MD_IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)]+)\)\s*$/;
+
+/** `**` で挟んだ部分を太字として解釈（Markdown に近い簡易ルール）。 */
+export function parseNegotoBoldSegments(text: string): NegotoInlinePiece[] {
+  const parts = text.split(/\*\*/);
+  if (parts.length === 1) {
+    return [{ kind: "text", text }];
+  }
+  const out: NegotoInlinePiece[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const segment = parts[i];
+    if (i % 2 === 0) {
+      out.push({ kind: "text", text: segment });
+    } else {
+      out.push({ kind: "bold", text: segment });
+    }
+  }
+  return out;
+}
 
 /**
  * コラム本文に埋め込む画像 URL を制限する。
@@ -153,7 +176,7 @@ export function excerptFromBody(body: string, maxLines = 3): string {
   for (const line of lines) {
     if (!line || line === "---" || /^##\s/.test(line)) continue;
     if (MD_IMAGE_LINE.test(line)) continue;
-    taken.push(line);
+    taken.push(line.replace(/\*\*/g, ""));
     if (taken.length >= maxLines) break;
   }
   return taken.join(" ");
