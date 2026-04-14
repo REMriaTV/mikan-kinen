@@ -385,19 +385,6 @@ export default function AdminNegotoClient({ token }: Props) {
             <label className="negoto-form-label" htmlFor="negoto-body-textarea">
               本文
             </label>
-            <input
-              id="negoto-upload-file-input"
-              ref={imageFileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
-              className="negoto-file-input-hidden"
-              aria-hidden
-              tabIndex={-1}
-              onChange={(ev) => {
-                const f = ev.target.files?.[0];
-                if (f) void uploadNegotoImage(f);
-              }}
-            />
             <textarea
               id="negoto-body-textarea"
               ref={bodyTextareaRef}
@@ -413,11 +400,24 @@ export default function AdminNegotoClient({ token }: Props) {
                     ? "negoto-btn negoto-btn-sm negoto-upload-label negoto-upload-label-disabled"
                     : "negoto-btn negoto-btn-sm negoto-upload-label"
                 }
-                htmlFor={uploadingImage ? undefined : "negoto-upload-file-input"}
               >
-                {uploadingImage
-                  ? "画像をアップロード中…"
-                  : "画像をアップロード（Supabase）"}
+                <input
+                  ref={imageFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
+                  className="negoto-file-input-overlay"
+                  disabled={uploadingImage}
+                  aria-label="画像ファイルを選ぶ"
+                  onChange={(ev) => {
+                    const f = ev.target.files?.[0];
+                    if (f) void uploadNegotoImage(f);
+                  }}
+                />
+                <span className="negoto-upload-label-text">
+                  {uploadingImage
+                    ? "画像をアップロード中…"
+                    : "画像をアップロード（Supabase）"}
+                </span>
               </label>
               <span className="negoto-form-help-inline">
                 選んだ画像をクラウドに保存し、下の本文欄へ自動で1行追加します（公開ページではそのまま画像表示）。
@@ -572,11 +572,25 @@ export default function AdminNegotoClient({ token }: Props) {
 .negoto-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(232,228,223,0.06); }
 .negoto-form-help { font-size: 11px; color: rgba(232,228,223,0.2); margin-top: 4px; font-family: "Courier New", monospace; }
 .negoto-form-group-body { position: relative; }
-.negoto-file-input-hidden { position: fixed; left: 0; top: 0; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; overflow: hidden; pointer-events: none; border: 0; }
+/* label 全体を透明な file input が覆う（pointer-events:none は Safari でファイル選択を壊すため使わない） */
+.negoto-upload-label { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; user-select: none; overflow: hidden; cursor: pointer; }
+.negoto-file-input-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 2;
+}
+.negoto-upload-label-text { position: relative; z-index: 1; pointer-events: none; }
 .negoto-form-upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 8px; }
 .negoto-form-help-inline { font-size: 11px; color: rgba(232,228,223,0.35); font-family: "Courier New", monospace; }
-.negoto-upload-label { display: inline-flex; align-items: center; gap: 6px; user-select: none; }
-.negoto-upload-label-disabled { pointer-events: none; opacity: 0.55; cursor: not-allowed; }
+.negoto-upload-label-disabled { opacity: 0.55; cursor: not-allowed; }
+.negoto-upload-label-disabled .negoto-file-input-overlay { cursor: not-allowed; }
 .negoto-upload-feedback { font-size: 12px; line-height: 1.7; margin: 0 0 10px 0; padding: 10px 12px; border-radius: 4px; }
 .negoto-upload-feedback-ok { color: rgba(160, 220, 180, 0.95); background: rgba(100, 200, 150, 0.1); border: 1px solid rgba(100, 200, 150, 0.2); }
 .negoto-upload-feedback-err { color: rgba(240, 180, 170, 0.95); background: rgba(200, 80, 60, 0.12); border: 1px solid rgba(200, 80, 60, 0.25); }
