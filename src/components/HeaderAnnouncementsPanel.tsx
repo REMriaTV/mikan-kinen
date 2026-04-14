@@ -42,11 +42,11 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
           {formatAnnouncementDate(latest.published_at)}
         </p>
       </div>
-      <p className="font-shippori text-[0.88rem] text-[#E8E4DF] leading-snug">
+      <p className="font-shippori text-[0.82rem] md:text-[0.88rem] text-[#E8E4DF] leading-snug">
         {latest.title}
       </p>
       {latest.summary ? (
-        <p className="text-[0.72rem] text-[rgba(232,228,223,0.72)] mt-1.5 leading-relaxed">
+        <p className="text-[0.68rem] md:text-[0.72rem] text-[rgba(232,228,223,0.72)] mt-1 md:mt-1.5 leading-relaxed">
           {latest.summary}
         </p>
       ) : null}
@@ -54,7 +54,7 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
   );
 
   const cardClass =
-    "block w-full rounded-sm border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.04)] px-3 py-2.5 md:px-4 md:py-3 hover:border-gold hover:bg-[rgba(255,255,255,0.06)] transition-colors";
+    "block w-full rounded-sm border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.04)] px-2.5 py-2 md:px-4 md:py-3 hover:border-gold hover:bg-[rgba(255,255,255,0.06)] transition-colors";
 
   return (
     <div className="w-full min-w-0 md:w-fit md:min-w-[22rem] md:max-w-[min(100%,34rem)] md:ml-auto">
@@ -74,7 +74,7 @@ export default function HeaderAnnouncementsPanel({ items }: Props) {
       )}
 
       {showListLink ? (
-        <div className="mt-2 text-right">
+        <div className="mt-1.5 md:mt-2 text-right">
           <Link
             href="/#site-news"
             className="text-[0.62rem] tracking-[0.12em] text-[rgba(232,228,223,0.45)] hover:text-gold/80 transition-colors"

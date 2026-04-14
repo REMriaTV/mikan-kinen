@@ -72,13 +72,13 @@ export default function BroadcastCountdownBanner({
 
   return (
     <section className="bg-[#0D0F12] text-[#E8E4DF] border-b border-[rgba(255,255,255,0.06)]">
-      <div className="max-w-[960px] mx-auto px-6 py-6 md:py-8 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-[0.65rem] tracking-[0.45em] uppercase text-[rgba(232,228,223,0.65)]">
+      <div className="max-w-[960px] mx-auto px-4 py-3 md:px-6 md:py-8 space-y-2.5 md:space-y-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2.5 md:gap-4">
+          <div className="space-y-1 md:space-y-2">
+            <p className="text-[0.58rem] md:text-[0.65rem] tracking-[0.35em] md:tracking-[0.45em] uppercase text-[rgba(232,228,223,0.65)]">
               {cfg.countdown.broadcastLabel}
             </p>
-            <div className="font-shippori font-bold text-[clamp(1.2rem,3vw,1.8rem)] leading-tight">
+            <div className="font-shippori font-bold text-[clamp(0.95rem,4.8vw,1.32rem)] md:text-[clamp(1.2rem,3vw,1.8rem)] leading-[1.15] md:leading-tight">
               {isLive ? (
                 <span className="text-gold">{cfg.countdown.nowChanneling}</span>
               ) : (
@@ -98,13 +98,17 @@ export default function BroadcastCountdownBanner({
                 </span>
               )}
             </div>
+            <div className="mt-1.5 space-y-0.5 text-[0.8rem] text-[rgba(232,228,223,0.86)] leading-[1.5] md:hidden">
+              <div>{cfg.countdown.eventDate}</div>
+              <div>{cfg.countdown.eventTagline}</div>
+            </div>
           </div>
 
-          <div className="md:text-right space-y-2">
+          <div className="md:text-right space-y-1 md:space-y-2">
             <Link
               href="/garage-v2"
               className={
-                "inline-block text-[0.8rem] tracking-[0.25em] px-6 py-3 border transition-all " +
+                "inline-block w-full text-center md:w-auto md:text-left text-[0.72rem] md:text-[0.8rem] tracking-[0.18em] md:tracking-[0.25em] px-4 py-2 md:px-6 md:py-3 border transition-all " +
                 (isLive
                   ? "bg-gold text-deep border-gold hover:bg-transparent hover:text-gold"
                   : "bg-[rgba(255,255,255,0.04)] text-[#E8E4DF] border-[rgba(255,255,255,0.18)] hover:border-gold")
@@ -112,7 +116,7 @@ export default function BroadcastCountdownBanner({
             >
               ▶ {isLive ? cfg.countdown.remChatLabelAfter : cfg.countdown.remChatLabelBefore}
             </Link>
-            <div className="text-[0.75rem] text-[rgba(232,228,223,0.65)]">
+            <div className="text-[0.68rem] md:text-[0.75rem] text-[rgba(232,228,223,0.65)] leading-snug">
               {isLive ? cfg.countdown.remChatNoteAfter : cfg.countdown.remChatNoteBefore}
             </div>
             {showMinogashiBannerCta ? (
@@ -121,8 +125,8 @@ export default function BroadcastCountdownBanner({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,38%)_minmax(0,62%)] gap-4 md:gap-8 items-start">
-          <div className="space-y-1 text-[0.9rem] text-[rgba(232,228,223,0.86)] leading-[1.9] min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,38%)_minmax(0,62%)] gap-2.5 md:gap-8 items-start">
+          <div className="hidden md:block space-y-0.5 md:space-y-1 text-[0.8rem] md:text-[0.9rem] text-[rgba(232,228,223,0.86)] leading-[1.55] md:leading-[1.9] min-w-0">
             <div>{cfg.countdown.eventDate}</div>
             <div>{cfg.countdown.eventTagline}</div>
           </div>
