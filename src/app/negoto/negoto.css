@@ -458,7 +458,7 @@
   height: auto;
   vertical-align: middle;
   /* ベタ白などの明るい画像を一段落とす（ヴェールと併用） */
-  filter: brightness(0.88);
+  filter: brightness(0.93);
 }
 
 /* コラム全体の暗いトーンに馴染ませるヴェール（明るい画像の浮きを抑える） */
@@ -470,11 +470,11 @@
   border-radius: inherit;
   background: linear-gradient(
     165deg,
-    rgba(13, 15, 18, 0.38) 0%,
-    rgba(8, 10, 12, 0.52) 55%,
-    rgba(5, 6, 8, 0.58) 100%
+    rgba(13, 15, 18, 0.26) 0%,
+    rgba(8, 10, 12, 0.38) 55%,
+    rgba(5, 6, 8, 0.44) 100%
   );
-  box-shadow: inset 0 0 48px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.22);
 }
 
 .negoto-scroll-reveal.negoto-zzz-block {
