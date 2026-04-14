@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import AdminNav from "@/components/AdminNav";
 import { NEGOTO_AUTHORS, type NegotoEntryRow } from "@/lib/negoto";
 
 type Props = { token: string };
@@ -250,6 +251,7 @@ export default function AdminNegotoClient({ token }: Props) {
   return (
     <>
       <div className="negoto-admin-wrap">
+        <AdminNav token={token} current="negoto" />
         <div className="negoto-admin-header">
           <div className="negoto-admin-title">
             寝言帳 管理<span>/ negoto admin</span>

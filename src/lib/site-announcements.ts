@@ -1,11 +1,19 @@
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
+/** トップヘッダー表示用（公開済みのみ取得） */
 export type SiteAnnouncementRow = {
   id: string;
   title: string;
   summary: string | null;
   link_url: string | null;
   published_at: string;
+};
+
+/** 管理画面一覧用 */
+export type SiteAnnouncementAdminRow = SiteAnnouncementRow & {
+  published: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 export async function getPublishedSiteAnnouncements(
