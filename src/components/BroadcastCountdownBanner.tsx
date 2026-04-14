@@ -121,13 +121,15 @@ export default function BroadcastCountdownBanner({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:gap-6 items-start">
-          <div className="space-y-1 text-[0.9rem] text-[rgba(232,228,223,0.86)] leading-[1.9]">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,38%)_minmax(0,62%)] gap-4 md:gap-8 items-start">
+          <div className="space-y-1 text-[0.9rem] text-[rgba(232,228,223,0.86)] leading-[1.9] min-w-0">
             <div>{cfg.countdown.eventDate}</div>
             <div>{cfg.countdown.eventTagline}</div>
           </div>
           {announcements.length > 0 ? (
-            <HeaderAnnouncementsPanel items={announcements} />
+            <div className="min-w-0 w-full">
+              <HeaderAnnouncementsPanel items={announcements} />
+            </div>
           ) : null}
         </div>
       </div>

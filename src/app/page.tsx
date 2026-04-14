@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import BroadcastCountdownBanner from "@/components/BroadcastCountdownBanner";
+import HomeSiteNewsSection from "@/components/HomeSiteNewsSection";
 import MinogashiHeroBadge from "@/components/MinogashiHeroBadge";
 import MinogashiSection from "@/components/MinogashiSection";
 import {
@@ -140,6 +141,10 @@ export default async function Home() {
       </div>
 
       <div className="divider" />
+
+      {announcements.length > 0 ? (
+        <HomeSiteNewsSection items={announcements} />
+      ) : null}
 
       {/* ABOUT */}
       <section className="max-w-[680px] mx-auto px-6 py-20">
