@@ -381,9 +381,12 @@ export default function AdminNegotoClient({ token }: Props) {
             </div>
           </div>
 
-          <div className="negoto-form-group">
-            <label className="negoto-form-label">本文</label>
+          <div className="negoto-form-group negoto-form-group-body">
+            <label className="negoto-form-label" htmlFor="negoto-body-textarea">
+              本文
+            </label>
             <input
+              id="negoto-upload-file-input"
               ref={imageFileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
@@ -396,6 +399,7 @@ export default function AdminNegotoClient({ token }: Props) {
               }}
             />
             <textarea
+              id="negoto-body-textarea"
               ref={bodyTextareaRef}
               className="negoto-form-textarea"
               value={fBody}
@@ -403,16 +407,18 @@ export default function AdminNegotoClient({ token }: Props) {
               placeholder="砂浜に枝で書くように..."
             />
             <div className="negoto-form-upload-row">
-              <button
-                type="button"
-                className="negoto-btn negoto-btn-sm"
-                disabled={uploadingImage}
-                onClick={() => imageFileInputRef.current?.click()}
+              <label
+                className={
+                  uploadingImage
+                    ? "negoto-btn negoto-btn-sm negoto-upload-label negoto-upload-label-disabled"
+                    : "negoto-btn negoto-btn-sm negoto-upload-label"
+                }
+                htmlFor={uploadingImage ? undefined : "negoto-upload-file-input"}
               >
                 {uploadingImage
                   ? "画像をアップロード中…"
                   : "画像をアップロード（Supabase）"}
-              </button>
+              </label>
               <span className="negoto-form-help-inline">
                 選んだ画像をクラウドに保存し、下の本文欄へ自動で1行追加します（公開ページではそのまま画像表示）。
               </span>
@@ -563,10 +569,12 @@ export default function AdminNegotoClient({ token }: Props) {
 .negoto-toggle-track.negoto-toggle-on .negoto-toggle-thumb { left: 18px; background: rgba(100,200,150,0.9); }
 .negoto-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(232,228,223,0.06); }
 .negoto-form-help { font-size: 11px; color: rgba(232,228,223,0.2); margin-top: 4px; font-family: "Courier New", monospace; }
-.negoto-file-input-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+.negoto-form-group-body { position: relative; }
+.negoto-file-input-hidden { position: fixed; left: 0; top: 0; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; overflow: hidden; pointer-events: none; border: 0; }
 .negoto-form-upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 8px; }
 .negoto-form-help-inline { font-size: 11px; color: rgba(232,228,223,0.35); font-family: "Courier New", monospace; }
-.negoto-form-upload-row .negoto-btn:disabled { opacity: 0.5; cursor: wait; }
+.negoto-upload-label { display: inline-flex; align-items: center; gap: 6px; user-select: none; }
+.negoto-upload-label-disabled { pointer-events: none; opacity: 0.55; cursor: not-allowed; }
 .negoto-upload-feedback { font-size: 12px; line-height: 1.7; margin: 0 0 10px 0; padding: 10px 12px; border-radius: 4px; }
 .negoto-upload-feedback-ok { color: rgba(160, 220, 180, 0.95); background: rgba(100, 200, 150, 0.1); border: 1px solid rgba(100, 200, 150, 0.2); }
 .negoto-upload-feedback-err { color: rgba(240, 180, 170, 0.95); background: rgba(200, 80, 60, 0.12); border: 1px solid rgba(200, 80, 60, 0.25); }
