@@ -278,9 +278,31 @@ export default function PvDeskClient() {
   return (
     <div className="space-y-10 text-[#E8E4DF]">
       {loadError ? (
-        <p className="rounded border border-[#6b3410] bg-[rgba(107,52,16,0.2)] px-4 py-3 text-sm text-[#f4a261]">
-          {loadError}（オフライン用にサンプルを表示しています）
-        </p>
+        <div className="space-y-3 rounded border border-[#6b3410] bg-[rgba(107,52,16,0.2)] px-4 py-3 text-sm text-[#f4a261]">
+          <p>
+            {loadError}
+            <span className="text-[rgba(232,228,223,0.75)]">（そのため、いまはサンプルデータを表示しています）</span>
+          </p>
+          {(loadError.includes("pv_production_boards") || loadError.includes("schema cache")) && (
+            <div className="border-t border-[rgba(255,255,255,0.1)] pt-3 text-[0.85rem] leading-relaxed text-[#E8E4DF]">
+              <p className="mb-2 font-shippori text-[#f4a261]">Supabase 側のチェックリスト</p>
+              <ol className="list-decimal space-y-1 pl-5 text-secondary">
+                <li>
+                  <span className="text-[#E8E4DF]">Vercel の環境変数</span>
+                  <code className="mx-1 text-[0.75rem] text-gold">SUPABASE_URL</code>
+                  が指しているプロジェクトを開き、
+                  <span className="text-[#E8E4DF]">そのプロジェクト</span>
+                  の SQL Editor で<code className="mx-1 text-[0.75rem] text-gold">sql/pv_production_board.sql</code>
+                  を実行してください（別プロジェクトに流すとこうなります）。
+                </li>
+                <li>
+                  Table Editor に<code className="mx-1 text-[0.75rem] text-gold">pv_production_boards</code>
+                  があるのにこの文句だけ出るときは、作成直後で API のスキーマキャッシュが追いついていないことがあります。数分待ってから「再読込」を試してください。
+                </li>
+              </ol>
+            </div>
+          )}
+        </div>
       ) : null}
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
@@ -290,8 +312,11 @@ export default function PvDeskClient() {
           <Field label="制作タイトル" rows={1} value={board.title} onChange={(v) => setBoard({ ...board, title: v })} />
         </div>
         <p className="mt-2 text-sm text-[rgba(232,228,223,0.62)]">
-          ブラウザで直接編集し、保存で Supabase に反映します。閲覧は誰でも、保存と画像アップロードは
-          <strong className="font-normal text-[#E8E4DF]">管理者ページと同じトークン</strong>
+          このページのURLは
+          <span className="text-[#E8E4DF]">そのまま公開してよい閲覧用アドレス</span>
+          です（ログイン不要）。見た目は制作デスク向けのフォームのままです。ブラウザで直接編集し、保存で
+          Supabase に反映します。閲覧は誰でも、保存と画像アップロードは
+          <span className="text-[#E8E4DF]">管理者ページと同じトークン</span>
           （環境変数 <code className="text-[0.8em] text-gold">ADMIN_BROADCAST_TOKEN</code>
           ）が必要です。
         </p>
