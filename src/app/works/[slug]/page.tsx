@@ -136,6 +136,23 @@ export default async function WorkPage({
           </section>
         )}
 
+        {work.slug === "banshu-survive" && (
+          <section className="mb-10">
+            <h2 className="text-xs text-dim tracking-widest mb-3 border-b border-[rgba(255,255,255,0.1)] pb-2">
+              制作進行（公開）
+            </h2>
+            <p className="text-secondary text-sm leading-relaxed mb-4">
+              町内環境PVの絵コンテ・歌詞・撮影メモをブラウザで編集し、Supabase に保存できます。
+            </p>
+            <Link
+              href="/works/banshu-survive/pv-desk"
+              className="inline-block text-gold hover:underline"
+            >
+              PV 制作デスクを開く →
+            </Link>
+          </section>
+        )}
+
         {/* Footer */}
         <div className="mt-12 pt-8 border-t border-[rgba(255,255,255,0.1)]">
           <p className="text-xs text-dim">
