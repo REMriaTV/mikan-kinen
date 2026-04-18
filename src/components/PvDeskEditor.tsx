@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   PV_BOARD_DEFAULT_SLUG,
   defaultPvBoardData,
@@ -8,27 +10,9 @@ import {
   type PvBoardData,
   type PvTimeOfDay,
 } from "@/lib/pv-board";
+import { parseYoutubeId } from "@/lib/pv-youtube";
 
 const STORAGE_TOKEN_KEY = "pv-board-token";
-
-function parseYoutubeId(raw: string): string | null {
-  const s = raw.trim();
-  if (!s) return null;
-  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
-  try {
-    const u = new URL(s);
-    if (u.hostname.includes("youtu.be")) {
-      const id = u.pathname.replace(/^\//, "").slice(0, 11);
-      return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
-    }
-    const v = u.searchParams.get("v");
-    if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
-  } catch {
-    /* ignore */
-  }
-  const m = s.match(/(?:v=|\/embed\/)([a-zA-Z0-9_-]{11})/);
-  return m?.[1] ?? null;
-}
 
 function timeOfDayLabel(t?: PvTimeOfDay): string {
   switch (t) {
@@ -71,7 +55,8 @@ function Field({
   );
 }
 
-export default function PvDeskClient() {
+export default function PvDeskEditor() {
+  const searchParams = useSearchParams();
   const [board, setBoard] = useState<PvBoardData | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -85,12 +70,19 @@ export default function PvDeskClient() {
 
   useEffect(() => {
     try {
-      const t = sessionStorage.getItem(STORAGE_TOKEN_KEY);
-      if (t) setToken(t);
+      const fromStore = sessionStorage.getItem(STORAGE_TOKEN_KEY) || "";
+      const fromUrl = searchParams.get("token")?.trim() || "";
+      if (fromUrl) {
+        setToken(fromUrl);
+        sessionStorage.setItem(STORAGE_TOKEN_KEY, fromUrl);
+      } else if (fromStore) {
+        setToken(fromStore);
+      }
     } catch {
-      /* private mode */
+      const fromUrl = searchParams.get("token")?.trim() || "";
+      if (fromUrl) setToken(fromUrl);
     }
-  }, []);
+  }, [searchParams]);
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -133,9 +125,7 @@ export default function PvDeskClient() {
     if (!board) return;
     setSaveMessage(null);
     if (!token.trim()) {
-      setSaveMessage(
-        "編集用トークンを入力してください（/admin/broadcast の URL の token= と同じ値）。"
-      );
+      setSaveMessage("トークンを入力するか、URL に ?token= を付けて開いてください。");
       return;
     }
     setSaving(true);
@@ -306,20 +296,22 @@ export default function PvDeskClient() {
       ) : null}
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
-        <p className="mb-2 text-[0.6rem] tracking-[0.45em] text-[rgba(232,228,223,0.55)]">LEMURIA TV / 制作進行</p>
+        <p className="mb-2 text-[0.6rem] tracking-[0.45em] text-[rgba(232,228,223,0.55)]">LEMURIA TV / 制作進行（編集）</p>
         <h1 className="font-shippori text-xl font-bold tracking-tight md:text-2xl">{board.title}</h1>
+        <p className="mt-3 text-sm leading-relaxed text-[rgba(232,228,223,0.62)]">
+          一般公開は{" "}
+          <Link href="/works/banshu-survive/pv-desk" className="text-gold underline-offset-2 hover:underline">
+            閲覧ページ
+          </Link>
+          。ここはフル編集用です。ブックマークは{" "}
+          <code className="rounded bg-[rgba(255,255,255,0.06)] px-1.5 py-0.5 text-[0.8em] text-gold">
+            /works/banshu-survive/pv-desk/edit?token=（あなたのトークン）
+          </code>{" "}
+          がおすすめです。
+        </p>
         <div className="mt-4 max-w-xl">
           <Field label="制作タイトル" rows={1} value={board.title} onChange={(v) => setBoard({ ...board, title: v })} />
         </div>
-        <p className="mt-2 text-sm text-[rgba(232,228,223,0.62)]">
-          このページのURLは
-          <span className="text-[#E8E4DF]">そのまま公開してよい閲覧用アドレス</span>
-          です（ログイン不要）。見た目は制作デスク向けのフォームのままです。ブラウザで直接編集し、保存で
-          Supabase に反映します。閲覧は誰でも、保存と画像アップロードは
-          <span className="text-[#E8E4DF]">管理者ページと同じトークン</span>
-          （環境変数 <code className="text-[0.8em] text-gold">ADMIN_BROADCAST_TOKEN</code>
-          ）が必要です。
-        </p>
         {updatedAt ? (
           <p className="mt-2 text-xs text-dim">最終更新（サーバー）: {new Date(updatedAt).toLocaleString("ja-JP")}</p>
         ) : (
@@ -373,13 +365,13 @@ export default function PvDeskClient() {
       </section>
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6">
-        <h2 className="mb-4 text-xs tracking-[0.35em] text-dim">編集用トークン</h2>
+        <h2 className="mb-4 text-xs tracking-[0.35em] text-dim">認証（保存・アップロード）</h2>
         <input
           type="password"
           autoComplete="off"
           value={token}
           onChange={(e) => persistToken(e.target.value)}
-          placeholder="ADMIN_BROADCAST_TOKEN（管理者ページの ?token= と同じ）"
+          placeholder="ADMIN_BROADCAST_TOKEN（?token= でも渡せます）"
           className="w-full rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.35)] px-3 py-2 text-sm text-[#E8E4DF] focus:border-[#E05A33] focus:outline-none"
         />
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -452,7 +444,7 @@ export default function PvDeskClient() {
                 </button>
               ) : null}
             </div>
-            <div className="min-w-0 space-y-3">
+            <div className="min-w-0 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-shippori text-lg text-[#E8E4DF]">
                   #{index + 1} {cut.sceneTitle || "無題"}
@@ -483,56 +475,113 @@ export default function PvDeskClient() {
                   </button>
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm text-secondary">
-                <input
-                  type="checkbox"
-                  checked={!!cut.shootDone}
-                  onChange={(e) => updateCut(cut.id, { shootDone: e.target.checked })}
-                />
-                撮影済み（完了）
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <span className="w-full text-[0.65rem] tracking-[0.2em] text-[rgba(232,228,223,0.45)]">時間帯</span>
-                {(
-                  [
-                    ["day", "昼"],
-                    ["night", "夜"],
-                    ["evening", "夕方"],
-                    ["flex", "昼/夜"],
-                  ] as const
-                ).map(([val, lab]) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => updateCut(cut.id, { timeOfDay: cut.timeOfDay === val ? undefined : val })}
-                    className={`rounded-full px-3 py-1 text-xs ${
-                      cut.timeOfDay === val
-                        ? "bg-[rgba(224,90,51,0.35)] text-[#E8E4DF]"
-                        : "bg-[rgba(255,255,255,0.06)] text-dim hover:bg-[rgba(255,255,255,0.1)]"
-                    }`}
-                  >
-                    {lab}
-                  </button>
-                ))}
-                <span className="self-center text-xs text-dim">現在: {timeOfDayLabel(cut.timeOfDay)}</span>
+
+              <div className="rounded border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.06)] p-3">
+                <p className="mb-2 text-[0.65rem] font-medium tracking-[0.15em] text-gold">公開ページに載る内容</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="シーン名" value={cut.sceneTitle} onChange={(v) => updateCut(cut.id, { sceneTitle: v })} rows={1} />
+                  <Field label="セクション" value={cut.section || ""} onChange={(v) => updateCut(cut.id, { section: v })} rows={1} />
+                  <Field label="開始タイムコード" value={cut.timecodeStart || ""} onChange={(v) => updateCut(cut.id, { timecodeStart: v })} rows={1} />
+                  <Field label="終了タイムコード" value={cut.timecodeEnd || ""} onChange={(v) => updateCut(cut.id, { timecodeEnd: v })} rows={1} />
+                </div>
+                <div className="mt-3 space-y-3">
+                  <Field label="内容・演出（説明）" value={cut.direction || ""} onChange={(v) => updateCut(cut.id, { direction: v })} rows={3} />
+                  <Field label="映像イメージ" value={cut.visual || ""} onChange={(v) => updateCut(cut.id, { visual: v })} rows={2} />
+                  <Field label="視聴者向けメモ" value={cut.viewerMemo || ""} onChange={(v) => updateCut(cut.id, { viewerMemo: v })} rows={2} />
+                  <Field label="歌詞・曲の場面" value={cut.lyricsPart || ""} onChange={(v) => updateCut(cut.id, { lyricsPart: v })} rows={2} />
+                  <Field
+                    label="音源 URL（mp3 等・公開）"
+                    value={cut.audioUrl || ""}
+                    onChange={(v) => updateCut(cut.id, { audioUrl: v || undefined })}
+                    rows={1}
+                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="block text-sm text-dim">
+                      音源 開始秒（任意）
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={cut.audioStartSec ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "") {
+                            updateCut(cut.id, { audioStartSec: undefined });
+                            return;
+                          }
+                          const n = Number.parseFloat(v);
+                          updateCut(cut.id, { audioStartSec: Number.isFinite(n) ? n : undefined });
+                        }}
+                        className="mt-1 w-full rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.35)] px-3 py-2 text-[#E8E4DF]"
+                      />
+                    </label>
+                    <label className="block text-sm text-dim">
+                      音源 終了秒（任意）
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={cut.audioEndSec ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "") {
+                            updateCut(cut.id, { audioEndSec: undefined });
+                            return;
+                          }
+                          const n = Number.parseFloat(v);
+                          updateCut(cut.id, { audioEndSec: Number.isFinite(n) ? n : undefined });
+                        }}
+                        className="mt-1 w-full rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.35)] px-3 py-2 text-[#E8E4DF]"
+                      />
+                    </label>
+                  </div>
+                </div>
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field label="シーン名" value={cut.sceneTitle} onChange={(v) => updateCut(cut.id, { sceneTitle: v })} rows={1} />
-                <Field label="セクション" value={cut.section || ""} onChange={(v) => updateCut(cut.id, { section: v })} rows={1} />
-                <Field label="開始タイムコード" value={cut.timecodeStart || ""} onChange={(v) => updateCut(cut.id, { timecodeStart: v })} rows={1} />
-                <Field label="終了タイムコード" value={cut.timecodeEnd || ""} onChange={(v) => updateCut(cut.id, { timecodeEnd: v })} rows={1} />
+
+              <div className="rounded border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.2)] p-3">
+                <p className="mb-2 text-[0.65rem] tracking-[0.15em] text-dim">制作・撮影（公開ページには出ません）</p>
+                <label className="mb-3 flex items-center gap-2 text-sm text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={!!cut.shootDone}
+                    onChange={(e) => updateCut(cut.id, { shootDone: e.target.checked })}
+                  />
+                  撮影済み（完了）
+                </label>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <span className="w-full text-[0.65rem] tracking-[0.2em] text-[rgba(232,228,223,0.45)]">時間帯</span>
+                  {(
+                    [
+                      ["day", "昼"],
+                      ["night", "夜"],
+                      ["evening", "夕方"],
+                      ["flex", "昼/夜"],
+                    ] as const
+                  ).map(([val, lab]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => updateCut(cut.id, { timeOfDay: cut.timeOfDay === val ? undefined : val })}
+                      className={`rounded-full px-3 py-1 text-xs ${
+                        cut.timeOfDay === val
+                          ? "bg-[rgba(224,90,51,0.35)] text-[#E8E4DF]"
+                          : "bg-[rgba(255,255,255,0.06)] text-dim hover:bg-[rgba(255,255,255,0.1)]"
+                      }`}
+                    >
+                      {lab}
+                    </button>
+                  ))}
+                  <span className="self-center text-xs text-dim">現在: {timeOfDayLabel(cut.timeOfDay)}</span>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="カット名（内部）" value={cut.cutName || ""} onChange={(v) => updateCut(cut.id, { cutName: v })} rows={1} />
+                  <Field label="手法（実写 / AI 等）" value={cut.method || ""} onChange={(v) => updateCut(cut.id, { method: v })} rows={1} />
+                  <Field label="撮影日" value={cut.shootDate || ""} onChange={(v) => updateCut(cut.id, { shootDate: v })} rows={1} />
+                </div>
+                <div className="mt-3 space-y-3">
+                  <Field label="カメラワーク" value={cut.camera || ""} onChange={(v) => updateCut(cut.id, { camera: v })} rows={2} />
+                  <Field label="内容（撮影メモ）" value={cut.contentAction || ""} onChange={(v) => updateCut(cut.id, { contentAction: v })} rows={2} />
+                  <Field label="スタッフ・撮影メモ（非公開）" value={cut.notes || ""} onChange={(v) => updateCut(cut.id, { notes: v })} rows={2} />
+                </div>
               </div>
-              <Field label="歌詞・曲の場面" value={cut.lyricsPart || ""} onChange={(v) => updateCut(cut.id, { lyricsPart: v })} />
-              <Field label="内容・演出" value={cut.direction || ""} onChange={(v) => updateCut(cut.id, { direction: v })} rows={3} />
-              <Field label="映像イメージ" value={cut.visual || ""} onChange={(v) => updateCut(cut.id, { visual: v })} rows={2} />
-              <Field label="カメラワーク" value={cut.camera || ""} onChange={(v) => updateCut(cut.id, { camera: v })} rows={2} />
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field label="カット名" value={cut.cutName || ""} onChange={(v) => updateCut(cut.id, { cutName: v })} rows={1} />
-                <Field label="手法（実写 / AI 等）" value={cut.method || ""} onChange={(v) => updateCut(cut.id, { method: v })} rows={1} />
-                <Field label="撮影日" value={cut.shootDate || ""} onChange={(v) => updateCut(cut.id, { shootDate: v })} rows={1} />
-              </div>
-              <Field label="内容（撮影メモ）" value={cut.contentAction || ""} onChange={(v) => updateCut(cut.id, { contentAction: v })} rows={2} />
-              <Field label="備考" value={cut.notes || ""} onChange={(v) => updateCut(cut.id, { notes: v })} rows={2} />
             </div>
           </article>
         ))}
@@ -540,7 +589,7 @@ export default function PvDeskClient() {
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6">
         <h2 className="mb-3 text-xs tracking-[0.35em] text-dim">公開プロセスログ</h2>
-        <p className="mb-3 text-sm text-secondary">制作の一言を積み重ねます（新しいものが上に来ます）。</p>
+        <p className="mb-3 text-sm text-secondary">制作の一言を積み重ねます（新しいものが上に来ます）。閲覧ページにも表示されます。</p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <textarea
             value={processDraft}

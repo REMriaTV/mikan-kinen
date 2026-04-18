@@ -21,7 +21,16 @@ export type PvBoardCut = {
   contentAction?: string;
   method?: string;
   shootDate?: string;
+  /** スタッフ・撮影向け（公開ページには出さない） */
   notes?: string;
+  /** 視聴者向けメモ（公開ページに載せる） */
+  viewerMemo?: string;
+  /** 公開用の参照音源 URL（mp3 等。Supabase Storage の公開 URL でも可） */
+  audioUrl?: string;
+  /** 音源の開始秒（任意・ブラウザ互換のため目安表示に使う） */
+  audioStartSec?: number;
+  /** 音源の終了秒（任意） */
+  audioEndSec?: number;
   /** Supabase Storage（pv-storyboard）の公開 URL */
   thumbnailUrl?: string;
 };
@@ -156,6 +165,10 @@ function normalizeCut(raw: unknown, fallbackIndex: number): PvBoardCut | null {
     method: typeof c.method === "string" ? c.method : undefined,
     shootDate: typeof c.shootDate === "string" ? c.shootDate : undefined,
     notes: typeof c.notes === "string" ? c.notes : undefined,
+    viewerMemo: typeof c.viewerMemo === "string" ? c.viewerMemo : undefined,
+    audioUrl: typeof c.audioUrl === "string" ? c.audioUrl : undefined,
+    audioStartSec: typeof c.audioStartSec === "number" && Number.isFinite(c.audioStartSec) ? c.audioStartSec : undefined,
+    audioEndSec: typeof c.audioEndSec === "number" && Number.isFinite(c.audioEndSec) ? c.audioEndSec : undefined,
     thumbnailUrl: typeof c.thumbnailUrl === "string" ? c.thumbnailUrl : undefined,
   };
 }

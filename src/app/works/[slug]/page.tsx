@@ -142,13 +142,13 @@ export default async function WorkPage({
               制作進行（公開）
             </h2>
             <p className="text-secondary text-sm leading-relaxed mb-4">
-              町内環境PVの絵コンテ・歌詞・撮影メモをブラウザで編集し、Supabase に保存できます。
+              町内環境PVの絵コンテ・説明・歌詞・制作の記録を閲覧できます。フル編集は管理用URL（トークン付き）のみです。
             </p>
             <Link
               href="/works/banshu-survive/pv-desk"
               className="inline-block text-gold hover:underline"
             >
-              PV 制作デスクを開く →
+              PV 制作進行を見る →
             </Link>
           </section>
         )}
