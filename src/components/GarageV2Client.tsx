@@ -51,7 +51,6 @@ const COPY = {
   SHARE_HINT_CANCELED: "映写は開始されませんでした（キャンセル）。",
   SHARE_HINT_MIC_CONFLICT:
     "映写とマイクを同時に使えない場合があります。先にREM（マイクON）にしてから映写するか、ブラウザの許可を確認してください。",
-  JOIN_NOTICE: "また一人、眠りに落ちました",
   LABEL_PASSPHRASE: "合言葉",
   PLACEHOLDER_PASSPHRASE: "会の合言葉を入力",
   BTN_EXPORT: "寝言を遺す",
@@ -214,7 +213,6 @@ function GarageV2Inner({
   const [passphraseError, setPassphraseError] = useState<string | null>(null);
   const [garageConfigReady, setGarageConfigReady] = useState(false);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
-  const announcedJoinIdsRef = useRef<Set<string>>(new Set());
   const [isMusicAdmin, setIsMusicAdmin] = useState(false);
   const [syncMode, setSyncMode] = useState<GarageSyncMode>(() =>
     typeof window !== "undefined" &&
@@ -513,35 +511,9 @@ function GarageV2Inner({
       setChatInput("");
       setChatMessages([]);
       seenMessageIdsRef.current.clear();
-      announcedJoinIdsRef.current.clear();
       clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef, activeCueOneShotsRef);
       void disposeRemGarageRouter();
     }, [disposeRemGarageRouter])
-  );
-
-  useDailyEvent(
-    "participant-joined",
-    useCallback((ev) => {
-      const p = ev?.participant;
-      if (!p || p.local === true) return;
-      const pid = String(p.user_id ?? "");
-      if (!pid || announcedJoinIdsRef.current.has(pid)) return;
-      announcedJoinIdsRef.current.add(pid);
-      const un = p.user_name;
-      const raw = typeof un === "string" && un.trim() ? un.trim() : "guest";
-      const label = displayDreamName(raw);
-      const id = `join-${pid}-${Date.now()}`;
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id,
-          from: "REM",
-          text: `${COPY.JOIN_NOTICE}（${label}）`,
-          timestamp: Date.now(),
-          system: true,
-        },
-      ]);
-    }, [])
   );
 
   useDailyEvent(
@@ -642,15 +614,7 @@ function GarageV2Inner({
       } catch {
         /* 履歴が取れなくても入室は続行 */
       }
-      const selfLabel = displayDreamName(name);
-      const selfJoinMsg: ChatMessage = {
-        id: `join-self-${Date.now()}`,
-        from: "REM",
-        text: `${COPY.JOIN_NOTICE}（${selfLabel}）`,
-        timestamp: Date.now(),
-        system: true,
-      };
-      setChatMessages([...historyRows, selfJoinMsg]);
+      setChatMessages([...historyRows]);
     } catch {
       // join 失敗時は何もしない
     }
@@ -716,7 +680,6 @@ function GarageV2Inner({
     setChatInput("");
     setChatMessages([]);
     seenMessageIdsRef.current.clear();
-    announcedJoinIdsRef.current.clear();
     clearRemGarageLocalAudio(bgmAudioMapRef, cuePreAudioRef, activeCueOneShotsRef);
     void disposeRemGarageRouter();
   };
