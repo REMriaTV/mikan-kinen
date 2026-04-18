@@ -1,5 +1,9 @@
 -- 播州サバイブ「町内環境PV」等の制作ボード（絵コンテ・歌詞・撮影メモを JSON で保持）
 -- Supabase SQL Editor で実行してください。
+--
+-- 【重要】必ずこのファイルを 1 行目から最後までまとめて実行してください。
+-- 「Storage:」以降だけを流すとバケットだけ作られ、pv_production_boards テーブルは
+-- 作成されません（その場合、制作デスクの保存はずっと失敗します）。
 
 CREATE TABLE IF NOT EXISTS pv_production_boards (
   slug TEXT PRIMARY KEY,
