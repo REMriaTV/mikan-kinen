@@ -639,9 +639,10 @@ export default function PvDeskEditor() {
       </section>
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6">
-        <h2 className="mb-3 text-xs tracking-[0.35em] text-dim">プロセスログ（編集のみ）</h2>
+        <h2 className="mb-3 text-xs tracking-[0.35em] text-dim">プロセスログ</h2>
         <p className="mb-3 text-sm text-secondary">
-          制作の一言を残せます（新しいものが上）。閲覧ページには出しません。データには保存されます。
+          制作の一言を時系列で残します（新しいものが先頭）。公開ページでは、<span className="text-[#E8E4DF]">最新の1件が「最新情報」</span>
+          として絵コンテの上に表示され、それ以前は「これまでの記録」から開けます。
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <textarea

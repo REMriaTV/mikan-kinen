@@ -220,8 +220,38 @@ export default function PvDeskViewer() {
         </section>
       ) : null}
 
+      {board.processLog.length > 0 ? (
+        <section
+          className="rounded-xl border border-[rgba(201,168,76,0.22)] bg-[rgba(201,168,76,0.07)] px-5 py-5 shadow-[0_4px_24px_rgba(0,0,0,0.2)]"
+          aria-label="制作の最新情報"
+        >
+          <h2 className="mb-3 text-[0.65rem] tracking-[0.35em] text-gold">最新情報</h2>
+          <p className="whitespace-pre-wrap font-shippori text-lg leading-relaxed text-[#E8E4DF]">
+            {board.processLog[0].message}
+          </p>
+          <time className="mt-2 block text-xs text-dim">
+            {new Date(board.processLog[0].at).toLocaleString("ja-JP")}
+          </time>
+          {board.processLog.length > 1 ? (
+            <details className="mt-4 border-t border-[rgba(255,255,255,0.1)] pt-3">
+              <summary className="cursor-pointer text-xs tracking-wider text-secondary hover:text-[#E8E4DF]">
+                これまでの記録（{board.processLog.length - 1} 件）
+              </summary>
+              <ul className="mt-3 space-y-3 border-l border-[rgba(201,168,76,0.25)] pl-4">
+                {board.processLog.slice(1).map((e, i) => (
+                  <li key={`${e.at}-${i}`} className="text-sm">
+                    <time className="block text-xs text-dim">{new Date(e.at).toLocaleString("ja-JP")}</time>
+                    <p className="mt-0.5 whitespace-pre-wrap leading-relaxed text-secondary">{e.message}</p>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="space-y-10">
-        <h2 className="text-xs tracking-[0.35em] text-dim">シーン</h2>
+        <h2 className="text-xs tracking-[0.35em] text-dim">シーン（絵コンテ）</h2>
         {board.cuts.length === 0 ? (
           <p className="text-sm text-dim">カットがまだありません。</p>
         ) : (
