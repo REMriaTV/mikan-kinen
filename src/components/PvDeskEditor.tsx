@@ -15,6 +15,15 @@ import { parseYoutubeId } from "@/lib/pv-youtube";
 
 const STORAGE_TOKEN_KEY = "pv-board-token";
 
+/** API の英語エラーをそのまま出さず、対処のヒントを足す */
+function formatSaveErrorMessage(raw: string): string {
+  const t = raw.trim();
+  if (t.includes("pv_production_boards") && (t.includes("schema cache") || t.includes("Could not find"))) {
+    return "Supabase にテーブル pv_production_boards がありません（または作成直後でまだ API に反映されていません）。接続しているプロジェクトの SQL Editor で sql/pv_production_board.sql を実行し、数分待ってからもう一度保存してください。";
+  }
+  return t;
+}
+
 function timeOfDayLabel(t?: PvTimeOfDay): string {
   switch (t) {
     case "day":
@@ -63,6 +72,8 @@ export default function PvDeskEditor() {
   const [token, setToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  /** 保存まわりの表示色（これまですべて text-secondary だったため区別がつきにくかった） */
+  const [saveMessageTone, setSaveMessageTone] = useState<"error" | "success" | "muted">("muted");
   const [ytPlaying, setYtPlaying] = useState(false);
   const [ytThumbFail, setYtThumbFail] = useState(false);
   const [processDraft, setProcessDraft] = useState("");
@@ -123,8 +134,10 @@ export default function PvDeskEditor() {
   const save = async () => {
     if (!board) return;
     setSaveMessage(null);
+    setSaveMessageTone("muted");
     if (!token.trim()) {
       setSaveMessage("トークンを入力するか、URL に ?token= を付けて開いてください。");
+      setSaveMessageTone("error");
       return;
     }
     setSaving(true);
@@ -146,6 +159,7 @@ export default function PvDeskEditor() {
         json = (await res.json()) as { ok?: boolean; error?: string; updatedAt?: string };
       } catch {
         setSaveMessage("サーバーからの応答が読み取れませんでした。");
+        setSaveMessageTone("error");
         return;
       }
       if (!res.ok || !json.ok) {
@@ -154,24 +168,29 @@ export default function PvDeskEditor() {
           setSaveMessage(
             "トークンが一致しません。Vercel の環境変数 ADMIN_BROADCAST_TOKEN（または PV_BOARD_TOKEN）と同じ値を入力してください。"
           );
+          setSaveMessageTone("error");
           return;
         }
         if (res.status === 503 && err.includes("ADMIN_BROADCAST_TOKEN")) {
           setSaveMessage(
             "サーバー側に ADMIN_BROADCAST_TOKEN が未設定のため保存できません。デプロイ先（Vercel）の環境変数を確認してください。"
           );
+          setSaveMessageTone("error");
           return;
         }
-        setSaveMessage(err || `保存に失敗しました（HTTP ${res.status}）`);
+        setSaveMessage(formatSaveErrorMessage(err || `保存に失敗しました（HTTP ${res.status}）`));
+        setSaveMessageTone("error");
         return;
       }
       if (typeof json.updatedAt === "string") {
         setUpdatedAt(json.updatedAt);
       }
       setSaveMessage("保存しました。公開ページを更新（再読み込み）すると反映されます。");
+      setSaveMessageTone("success");
       await load();
     } catch {
       setSaveMessage("通信エラー（ネットワークまたはブロッカーを確認してください）");
+      setSaveMessageTone("error");
     } finally {
       setSaving(false);
     }
@@ -277,10 +296,12 @@ export default function PvDeskEditor() {
   const uploadImage = async (cutId: string, file: File) => {
     if (!token.trim()) {
       setSaveMessage("画像アップロードにはトークンが必要です。");
+      setSaveMessageTone("error");
       return;
     }
     setUploadingId(cutId);
     setSaveMessage(null);
+    setSaveMessageTone("muted");
     try {
       const fd = new FormData();
       fd.set("token", token.trim());
@@ -288,7 +309,8 @@ export default function PvDeskEditor() {
       const res = await fetch("/api/pv-board/upload", { method: "POST", body: fd });
       const json = (await res.json()) as { ok?: boolean; publicUrl?: string; error?: string };
       if (!res.ok || !json.ok || !json.publicUrl) {
-        setSaveMessage(json.error || "アップロードに失敗しました");
+        setSaveMessage(formatSaveErrorMessage(json.error || "アップロードに失敗しました"));
+        setSaveMessageTone("error");
         return;
       }
       const publicUrl = json.publicUrl;
@@ -306,6 +328,7 @@ export default function PvDeskEditor() {
       });
     } catch {
       setSaveMessage("アップロード通信エラー");
+      setSaveMessageTone("error");
     } finally {
       setUploadingId(null);
     }
@@ -442,7 +465,20 @@ export default function PvDeskEditor() {
             カットを追加
           </button>
         </div>
-        {saveMessage ? <p className="mt-3 text-sm text-secondary">{saveMessage}</p> : null}
+        {saveMessage ? (
+          <p
+            role={saveMessageTone === "error" ? "alert" : undefined}
+            className={`mt-3 text-sm ${
+              saveMessageTone === "error"
+                ? "text-[#f4a8a8]"
+                : saveMessageTone === "success"
+                  ? "text-[#7dcea0]"
+                  : "text-secondary"
+            }`}
+          >
+            {saveMessage}
+          </p>
+        ) : null}
       </section>
 
       <section className="space-y-6">
