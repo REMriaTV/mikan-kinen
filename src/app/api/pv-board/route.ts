@@ -115,14 +115,19 @@ export async function PUT(req: Request) {
 
   try {
     const supabase = getSupabaseAdminClient();
-    const { error } = await supabase.from("pv_production_boards").upsert(
-      {
-        slug,
-        data,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "slug" }
-    );
+    const updatedAt = new Date().toISOString();
+    const { data: row, error } = await supabase
+      .from("pv_production_boards")
+      .upsert(
+        {
+          slug,
+          data,
+          updated_at: updatedAt,
+        },
+        { onConflict: "slug" }
+      )
+      .select("updated_at")
+      .single();
 
     if (error) {
       console.error("[pv-board PUT]", error);
@@ -132,7 +137,11 @@ export async function PUT(req: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true, slug });
+    return NextResponse.json({
+      ok: true,
+      slug,
+      updatedAt: typeof row?.updated_at === "string" ? row.updated_at : updatedAt,
+    });
   } catch (e) {
     console.error("[pv-board PUT]", e);
     const msg = e instanceof Error ? e.message : "不明なエラー";

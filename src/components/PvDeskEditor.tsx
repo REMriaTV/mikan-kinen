@@ -86,7 +86,9 @@ export default function PvDeskEditor() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/pv-board?slug=${encodeURIComponent(PV_BOARD_DEFAULT_SLUG)}`);
+      const res = await fetch(`/api/pv-board?slug=${encodeURIComponent(PV_BOARD_DEFAULT_SLUG)}`, {
+        cache: "no-store",
+      });
       const json = (await res.json()) as { ok?: boolean; data?: PvBoardData; error?: string; updatedAt?: string };
       if (!res.ok || !json.ok || !json.data) {
         setBoard(defaultPvBoardData());
@@ -137,16 +139,39 @@ export default function PvDeskEditor() {
           slug: PV_BOARD_DEFAULT_SLUG,
           data: board,
         }),
+        cache: "no-store",
       });
-      const json = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok || !json.ok) {
-        setSaveMessage(json.error || "保存に失敗しました");
+      let json: { ok?: boolean; error?: string; updatedAt?: string } = {};
+      try {
+        json = (await res.json()) as { ok?: boolean; error?: string; updatedAt?: string };
+      } catch {
+        setSaveMessage("サーバーからの応答が読み取れませんでした。");
         return;
       }
-      setSaveMessage("保存しました");
+      if (!res.ok || !json.ok) {
+        const err = json.error || "";
+        if (res.status === 401 || err === "Unauthorized") {
+          setSaveMessage(
+            "トークンが一致しません。Vercel の環境変数 ADMIN_BROADCAST_TOKEN（または PV_BOARD_TOKEN）と同じ値を入力してください。"
+          );
+          return;
+        }
+        if (res.status === 503 && err.includes("ADMIN_BROADCAST_TOKEN")) {
+          setSaveMessage(
+            "サーバー側に ADMIN_BROADCAST_TOKEN が未設定のため保存できません。デプロイ先（Vercel）の環境変数を確認してください。"
+          );
+          return;
+        }
+        setSaveMessage(err || `保存に失敗しました（HTTP ${res.status}）`);
+        return;
+      }
+      if (typeof json.updatedAt === "string") {
+        setUpdatedAt(json.updatedAt);
+      }
+      setSaveMessage("保存しました。公開ページを更新（再読み込み）すると反映されます。");
       await load();
     } catch {
-      setSaveMessage("通信エラー");
+      setSaveMessage("通信エラー（ネットワークまたはブロッカーを確認してください）");
     } finally {
       setSaving(false);
     }

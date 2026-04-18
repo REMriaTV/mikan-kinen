@@ -119,7 +119,9 @@ export default function PvDeskViewer() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/pv-board?slug=${encodeURIComponent(PV_BOARD_DEFAULT_SLUG)}`);
+      const res = await fetch(`/api/pv-board?slug=${encodeURIComponent(PV_BOARD_DEFAULT_SLUG)}`, {
+        cache: "no-store",
+      });
       const json = (await res.json()) as { ok?: boolean; data?: PvBoardData; error?: string; updatedAt?: string };
       if (!res.ok || !json.ok || !json.data) {
         setBoard(defaultPvBoardData());
