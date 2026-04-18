@@ -19,7 +19,15 @@ const STORAGE_TOKEN_KEY = "pv-board-token";
 function formatSaveErrorMessage(raw: string): string {
   const t = raw.trim();
   if (t.includes("pv_production_boards") && (t.includes("schema cache") || t.includes("Could not find"))) {
-    return "Supabase にテーブル pv_production_boards がありません（または作成直後でまだ API に反映されていません）。接続しているプロジェクトの SQL Editor で sql/pv_production_board.sql を実行し、数分待ってからもう一度保存してください。";
+    return [
+      "Supabase の API が「テーブルが見つからない」と言っています。",
+      "",
+      "Table Editor に pv_production_boards があるのにこのエラーが続くときは、多くの場合「Vercel が接続している Supabase が、今ダッシュボードで見ているプロジェクトと違う」ことが原因です。",
+      "",
+      "Supabase（BANSHU-SURVIVE などテーブルを作った側）の Settings → API で Project URL と service_role キーをコピーし、Vercel の SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY に同じ値を設定して再デプロイしてください。",
+      "",
+      "テーブルが本当に無い場合のみ: SQL Editor で sql/pv_production_board.sql を先頭から実行し、数分待ってから再試行。",
+    ].join("\n");
   }
   return t;
 }
@@ -384,6 +392,30 @@ export default function PvDeskEditor() {
         ) : (
           <p className="mt-2 text-xs text-dim">まだサーバーに保存されていません（初回保存で作成されます）。</p>
         )}
+
+        <div className="mt-6 rounded border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.2)] p-4">
+          <p className="mb-2 text-[0.65rem] tracking-[0.15em] text-gold">公開ページ（閲覧）の画像まわり</p>
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-secondary">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={board.viewerImageAutoplay === true}
+              onChange={(e) =>
+                setBoard({
+                  ...board,
+                  viewerImageAutoplay: e.target.checked ? true : undefined,
+                })
+              }
+            />
+            <span>
+              <span className="text-[#E8E4DF]">複数枚あるとき、自動で切り替え（スライド）</span>
+              <span className="mt-1 block text-xs leading-relaxed text-dim">
+                ON にすると公開ページで約3.5秒ごとに次の画像へ進みます（GIFのような見え方。画像の上にマウスを置くと止まります）。
+                サーバーでGIFファイルは作りません。1枚だけのカットや、手動の≪＜＞≫は従来どおり使えます。
+              </span>
+            </span>
+          </label>
+        </div>
       </section>
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6">
@@ -468,13 +500,13 @@ export default function PvDeskEditor() {
         {saveMessage ? (
           <p
             role={saveMessageTone === "error" ? "alert" : undefined}
-            className={`mt-3 text-sm ${
+            className={`mt-3 text-sm leading-relaxed ${
               saveMessageTone === "error"
                 ? "text-[#f4a8a8]"
                 : saveMessageTone === "success"
                   ? "text-[#7dcea0]"
                   : "text-secondary"
-            }`}
+            } ${saveMessageTone === "error" ? "whitespace-pre-wrap" : ""}`}
           >
             {saveMessage}
           </p>

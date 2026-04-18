@@ -16,13 +16,31 @@ function formatSecLabel(n?: number): string | null {
   return `${n.toFixed(1)}秒`;
 }
 
-function CutImageCarousel({ urls }: { urls: string[] }) {
+const SLIDE_MS = 3500;
+
+function CutImageCarousel({
+  urls,
+  autoplay = false,
+}: {
+  urls: string[];
+  /** 複数枚のとき、公開ページで自動で次の画像へ（GIF風。ホバーで一時停止） */
+  autoplay?: boolean;
+}) {
   const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
   const n = urls.length;
 
   useEffect(() => {
     if (idx >= n) setIdx(Math.max(0, n - 1));
   }, [n, idx]);
+
+  useEffect(() => {
+    if (!autoplay || n <= 1 || paused) return;
+    const id = window.setInterval(() => {
+      setIdx((i) => (i + 1) % n);
+    }, SLIDE_MS);
+    return () => window.clearInterval(id);
+  }, [autoplay, n, paused]);
 
   if (n === 0) {
     return (
@@ -42,10 +60,19 @@ function CutImageCarousel({ urls }: { urls: string[] }) {
   }
 
   return (
-    <div className="flex h-full min-h-[200px] flex-col bg-black/20">
+    <div
+      className="flex h-full min-h-[200px] flex-col bg-black/20"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div className="relative min-h-0 flex-1">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={urls[idx]} alt="" className="h-full w-full object-contain" />
+        {autoplay && n > 1 ? (
+          <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/55 px-2 py-0.5 text-[0.65rem] text-dim">
+            自動スライド{paused ? "（一時停止）" : ""}
+          </span>
+        ) : null}
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-center gap-1 border-t border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.35)] px-2 py-2">
         <button
@@ -67,6 +94,7 @@ function CutImageCarousel({ urls }: { urls: string[] }) {
         </button>
         <span className="min-w-[4rem] px-2 text-center text-xs tabular-nums text-dim">
           {idx + 1} / {n}
+          {autoplay && n > 1 ? <span className="ml-1 text-[0.65rem] opacity-70">・{SLIDE_MS / 1000}秒</span> : null}
         </span>
         <button
           type="button"
@@ -264,7 +292,10 @@ export default function PvDeskViewer() {
             >
               <div className="grid gap-0 md:grid-cols-[minmax(0,280px)_1fr]">
                 <div className="relative flex aspect-video w-full flex-col bg-[rgba(255,255,255,0.03)] md:aspect-auto md:min-h-[220px]">
-                  <CutImageCarousel urls={getCutImageUrls(cut)} />
+                  <CutImageCarousel
+                    urls={getCutImageUrls(cut)}
+                    autoplay={board.viewerImageAutoplay === true}
+                  />
                 </div>
                 <div className="flex flex-col gap-4 p-6">
                   <div>

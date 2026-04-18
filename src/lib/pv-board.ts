@@ -56,6 +56,11 @@ export type PvBoardData = {
   youtubeVideoId?: string;
   cuts: PvBoardCut[];
   processLog: PvProcessLogEntry[];
+  /**
+   * 公開ページで、複数枚の絵コンテを自動スライド（GIF風）するか。
+   * サーバーでGIFファイルは生成しない（画像URLを順に切り替えるだけ）。
+   */
+  viewerImageAutoplay?: boolean;
 };
 
 export function emptyPvBoardData(): PvBoardData {
@@ -114,6 +119,9 @@ export function normalizePvBoardData(raw: unknown): PvBoardData {
   if (typeof o.title === "string" && o.title.trim()) base.title = o.title.trim();
   if (typeof o.youtubeVideoId === "string" && o.youtubeVideoId.trim()) {
     base.youtubeVideoId = o.youtubeVideoId.trim();
+  }
+  if (typeof o.viewerImageAutoplay === "boolean") {
+    base.viewerImageAutoplay = o.viewerImageAutoplay;
   }
 
   base.cuts = o.cuts

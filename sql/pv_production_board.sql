@@ -4,6 +4,10 @@
 -- 【重要】必ずこのファイルを 1 行目から最後までまとめて実行してください。
 -- 「Storage:」以降だけを流すとバケットだけ作られ、pv_production_boards テーブルは
 -- 作成されません（その場合、制作デスクの保存はずっと失敗します）。
+--
+-- 【Vercel】保存 API は環境変数 SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY で接続します。
+-- Table Editor にテーブルがあるのに保存だけ失敗するときは、ダッシュボードで開いている
+-- プロジェクトと、Vercel に設定した URL・キーが同じプロジェクトか確認してください。
 
 CREATE TABLE IF NOT EXISTS pv_production_boards (
   slug TEXT PRIMARY KEY,
