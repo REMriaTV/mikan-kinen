@@ -39,24 +39,20 @@ function CutAudioPublic({ cut }: { cut: PvBoardCut }) {
 export default function PvDeskViewer() {
   const [board, setBoard] = useState<PvBoardData | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [ytPlaying, setYtPlaying] = useState(false);
   const [ytThumbFail, setYtThumbFail] = useState(false);
 
   const load = useCallback(async () => {
-    setLoadError(null);
     try {
       const res = await fetch(`/api/pv-board?slug=${encodeURIComponent(PV_BOARD_DEFAULT_SLUG)}`);
       const json = (await res.json()) as { ok?: boolean; data?: PvBoardData; error?: string; updatedAt?: string };
       if (!res.ok || !json.ok || !json.data) {
-        setLoadError(json.error || "読み込みに失敗しました");
         setBoard(defaultPvBoardData());
         return;
       }
       setBoard(json.data);
       setUpdatedAt(typeof json.updatedAt === "string" ? json.updatedAt : null);
     } catch {
-      setLoadError("通信エラー");
       setBoard(defaultPvBoardData());
     }
   }, []);
@@ -98,34 +94,6 @@ export default function PvDeskViewer() {
 
   return (
     <div className="space-y-12 text-[#E8E4DF]">
-      {loadError ? (
-        <div className="space-y-3 rounded border border-[#6b3410] bg-[rgba(107,52,16,0.2)] px-4 py-3 text-sm text-[#f4a261]">
-          <p>
-            {loadError}
-            <span className="text-[rgba(232,228,223,0.75)]">（そのため、いまはサンプルデータを表示しています）</span>
-          </p>
-          {(loadError.includes("pv_production_boards") || loadError.includes("schema cache")) && (
-            <div className="border-t border-[rgba(255,255,255,0.1)] pt-3 text-[0.85rem] leading-relaxed text-[#E8E4DF]">
-              <p className="mb-2 font-shippori text-[#f4a261]">Supabase 側のチェックリスト</p>
-              <ol className="list-decimal space-y-1 pl-5 text-secondary">
-                <li>
-                  <span className="text-[#E8E4DF]">Vercel の環境変数</span>
-                  <code className="mx-1 text-[0.75rem] text-gold">SUPABASE_URL</code>
-                  が指しているプロジェクトを開き、
-                  <span className="text-[#E8E4DF]">そのプロジェクト</span>
-                  の SQL Editor で<code className="mx-1 text-[0.75rem] text-gold">sql/pv_production_board.sql</code>
-                  を実行してください（別プロジェクトに流すとこうなります）。
-                </li>
-                <li>
-                  Table Editor に<code className="mx-1 text-[0.75rem] text-gold">pv_production_boards</code>
-                  があるのにこの文句だけ出るときは、作成直後で API のスキーマキャッシュが追いついていないことがあります。数分待ってから再読み込みしてください。
-                </li>
-              </ol>
-            </div>
-          )}
-        </div>
-      ) : null}
-
       <header className="border-b border-[rgba(255,255,255,0.08)] pb-8">
         <p className="mb-2 text-[0.6rem] tracking-[0.45em] text-[rgba(232,228,223,0.55)]">LEMURIA TV / 制作進行（公開）</p>
         <h1 className="font-shippori text-2xl font-bold tracking-tight md:text-3xl">{board.title}</h1>

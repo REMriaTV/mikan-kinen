@@ -59,7 +59,6 @@ export default function PvDeskEditor() {
   const searchParams = useSearchParams();
   const [board, setBoard] = useState<PvBoardData | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [token, setToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -85,19 +84,16 @@ export default function PvDeskEditor() {
   }, [searchParams]);
 
   const load = useCallback(async () => {
-    setLoadError(null);
     try {
       const res = await fetch(`/api/pv-board?slug=${encodeURIComponent(PV_BOARD_DEFAULT_SLUG)}`);
       const json = (await res.json()) as { ok?: boolean; data?: PvBoardData; error?: string; updatedAt?: string };
       if (!res.ok || !json.ok || !json.data) {
-        setLoadError(json.error || "読み込みに失敗しました");
         setBoard(defaultPvBoardData());
         return;
       }
       setBoard(json.data);
       setUpdatedAt(typeof json.updatedAt === "string" ? json.updatedAt : null);
     } catch {
-      setLoadError("通信エラー");
       setBoard(defaultPvBoardData());
     }
   }, []);
@@ -267,34 +263,6 @@ export default function PvDeskEditor() {
 
   return (
     <div className="space-y-10 text-[#E8E4DF]">
-      {loadError ? (
-        <div className="space-y-3 rounded border border-[#6b3410] bg-[rgba(107,52,16,0.2)] px-4 py-3 text-sm text-[#f4a261]">
-          <p>
-            {loadError}
-            <span className="text-[rgba(232,228,223,0.75)]">（そのため、いまはサンプルデータを表示しています）</span>
-          </p>
-          {(loadError.includes("pv_production_boards") || loadError.includes("schema cache")) && (
-            <div className="border-t border-[rgba(255,255,255,0.1)] pt-3 text-[0.85rem] leading-relaxed text-[#E8E4DF]">
-              <p className="mb-2 font-shippori text-[#f4a261]">Supabase 側のチェックリスト</p>
-              <ol className="list-decimal space-y-1 pl-5 text-secondary">
-                <li>
-                  <span className="text-[#E8E4DF]">Vercel の環境変数</span>
-                  <code className="mx-1 text-[0.75rem] text-gold">SUPABASE_URL</code>
-                  が指しているプロジェクトを開き、
-                  <span className="text-[#E8E4DF]">そのプロジェクト</span>
-                  の SQL Editor で<code className="mx-1 text-[0.75rem] text-gold">sql/pv_production_board.sql</code>
-                  を実行してください（別プロジェクトに流すとこうなります）。
-                </li>
-                <li>
-                  Table Editor に<code className="mx-1 text-[0.75rem] text-gold">pv_production_boards</code>
-                  があるのにこの文句だけ出るときは、作成直後で API のスキーマキャッシュが追いついていないことがあります。数分待ってから「再読込」を試してください。
-                </li>
-              </ol>
-            </div>
-          )}
-        </div>
-      ) : null}
-
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
         <p className="mb-2 text-[0.6rem] tracking-[0.45em] text-[rgba(232,228,223,0.55)]">LEMURIA TV / 制作進行（編集）</p>
         <h1 className="font-shippori text-xl font-bold tracking-tight md:text-2xl">{board.title}</h1>
@@ -538,14 +506,19 @@ export default function PvDeskEditor() {
 
               <div className="rounded border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.2)] p-3">
                 <p className="mb-2 text-[0.65rem] tracking-[0.15em] text-dim">制作・撮影（公開ページには出ません）</p>
-                <label className="mb-3 flex items-center gap-2 text-sm text-secondary">
-                  <input
-                    type="checkbox"
-                    checked={!!cut.shootDone}
-                    onChange={(e) => updateCut(cut.id, { shootDone: e.target.checked })}
-                  />
-                  撮影済み（完了）
-                </label>
+                <div className="mb-3">
+                  <label className="flex items-center gap-2 text-sm text-secondary">
+                    <input
+                      type="checkbox"
+                      checked={!!cut.shootDone}
+                      onChange={(e) => updateCut(cut.id, { shootDone: e.target.checked })}
+                    />
+                    撮影済み（完了）
+                  </label>
+                  <p className="mt-1.5 pl-6 text-[0.75rem] leading-relaxed text-dim">
+                    このカットの実写撮影が終わったかを、制作側だけの進捗として記録するためのものです。公開ページには出ません。
+                  </p>
+                </div>
                 <div className="mb-3 flex flex-wrap gap-2">
                   <span className="w-full text-[0.65rem] tracking-[0.2em] text-[rgba(232,228,223,0.45)]">時間帯</span>
                   {(
