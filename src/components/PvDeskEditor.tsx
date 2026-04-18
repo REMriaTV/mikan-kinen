@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import {
   PV_BOARD_DEFAULT_SLUG,
   defaultPvBoardData,
+  getCutImageUrls,
   type PvBoardCut,
   type PvBoardData,
   type PvTimeOfDay,
@@ -199,6 +200,44 @@ export default function PvDeskEditor() {
     });
   };
 
+  const removeImageAt = (cutId: string, imageIndex: number) => {
+    setBoard((b) => {
+      if (!b) return b;
+      return {
+        ...b,
+        cuts: b.cuts.map((c) => {
+          if (c.id !== cutId) return c;
+          const urls = getCutImageUrls(c);
+          const next = urls.filter((_, i) => i !== imageIndex);
+          return {
+            ...c,
+            imageUrls: next.length > 0 ? next : undefined,
+            thumbnailUrl: undefined,
+          };
+        }),
+      };
+    });
+  };
+
+  const moveImage = (cutId: string, imageIndex: number, dir: -1 | 1) => {
+    setBoard((b) => {
+      if (!b) return b;
+      return {
+        ...b,
+        cuts: b.cuts.map((c) => {
+          if (c.id !== cutId) return c;
+          const urls = [...getCutImageUrls(c)];
+          const j = imageIndex + dir;
+          if (j < 0 || j >= urls.length) return c;
+          const tmp = urls[imageIndex];
+          urls[imageIndex] = urls[j];
+          urls[j] = tmp;
+          return { ...c, imageUrls: urls, thumbnailUrl: undefined };
+        }),
+      };
+    });
+  };
+
   const appendProcess = () => {
     const msg = processDraft.trim();
     if (!msg) return;
@@ -227,7 +266,19 @@ export default function PvDeskEditor() {
         setSaveMessage(json.error || "アップロードに失敗しました");
         return;
       }
-      updateCut(cutId, { thumbnailUrl: json.publicUrl });
+      const publicUrl = json.publicUrl;
+      setBoard((b) => {
+        if (!b) return b;
+        const cut = b.cuts.find((c) => c.id === cutId);
+        if (!cut) return b;
+        const nextUrls = [...getCutImageUrls(cut), publicUrl];
+        return {
+          ...b,
+          cuts: b.cuts.map((c) =>
+            c.id === cutId ? { ...c, imageUrls: nextUrls, thumbnailUrl: undefined } : c
+          ),
+        };
+      });
     } catch {
       setSaveMessage("アップロード通信エラー");
     } finally {
@@ -376,20 +427,52 @@ export default function PvDeskEditor() {
             key={cut.id}
             className="grid gap-5 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#111116] p-5 md:grid-cols-[minmax(0,200px)_1fr]"
           >
-            <div className="space-y-3">
-              <div className="relative aspect-video w-full max-w-[240px] overflow-hidden rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)]">
-                {cut.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cut.thumbnailUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-[0.7rem] text-dim">
-                    <span>絵コンテ・参考画像</span>
-                    <span>未設定</span>
-                  </div>
-                )}
-              </div>
+            <div className="max-w-[260px] space-y-3">
+              <p className="text-[0.65rem] tracking-[0.15em] text-dim">絵コンテ・参考画像（複数可）</p>
+              {getCutImageUrls(cut).length === 0 ? (
+                <div className="flex aspect-video w-full max-w-[240px] flex-col items-center justify-center gap-1 rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] p-2 text-center text-[0.7rem] text-dim">
+                  <span>未設定</span>
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {getCutImageUrls(cut).map((url, imgIdx) => (
+                    <li
+                      key={`${cut.id}-img-${imgIdx}`}
+                      className="overflow-hidden rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)]"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt="" className="aspect-video w-full object-cover" />
+                      <div className="flex flex-wrap gap-1 border-t border-[rgba(255,255,255,0.08)] p-1.5">
+                        <button
+                          type="button"
+                          className="rounded border border-[rgba(255,255,255,0.12)] px-1.5 py-0.5 text-[0.65rem] disabled:opacity-30"
+                          disabled={imgIdx === 0}
+                          onClick={() => moveImage(cut.id, imgIdx, -1)}
+                        >
+                          上へ
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded border border-[rgba(255,255,255,0.12)] px-1.5 py-0.5 text-[0.65rem] disabled:opacity-30"
+                          disabled={imgIdx >= getCutImageUrls(cut).length - 1}
+                          onClick={() => moveImage(cut.id, imgIdx, 1)}
+                        >
+                          下へ
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded border border-[rgba(180,60,60,0.45)] px-1.5 py-0.5 text-[0.65rem] text-[#f4a8a8]"
+                          onClick={() => removeImageAt(cut.id, imgIdx)}
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <label className="block text-xs text-dim">
-                <span className="mb-1 block tracking-wider">画像アップロード</span>
+                <span className="mb-1 block tracking-wider">画像を追加</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
@@ -402,15 +485,6 @@ export default function PvDeskEditor() {
                   className="w-full text-xs text-secondary file:mr-2 file:rounded file:border-0 file:bg-[rgba(224,90,51,0.25)] file:px-2 file:py-1 file:text-[#E8E4DF]"
                 />
               </label>
-              {cut.thumbnailUrl ? (
-                <button
-                  type="button"
-                  onClick={() => updateCut(cut.id, { thumbnailUrl: undefined })}
-                  className="text-xs text-dim underline hover:text-secondary"
-                >
-                  画像を外す
-                </button>
-              ) : null}
             </div>
             <div className="min-w-0 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -504,65 +578,71 @@ export default function PvDeskEditor() {
                 </div>
               </div>
 
-              <div className="rounded border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.2)] p-3">
-                <p className="mb-2 text-[0.65rem] tracking-[0.15em] text-dim">制作・撮影（公開ページには出ません）</p>
-                <div className="mb-3">
-                  <label className="flex items-center gap-2 text-sm text-secondary">
-                    <input
-                      type="checkbox"
-                      checked={!!cut.shootDone}
-                      onChange={(e) => updateCut(cut.id, { shootDone: e.target.checked })}
-                    />
-                    撮影済み（完了）
-                  </label>
-                  <p className="mt-1.5 pl-6 text-[0.75rem] leading-relaxed text-dim">
-                    このカットの実写撮影が終わったかを、制作側だけの進捗として記録するためのものです。公開ページには出ません。
-                  </p>
+              <details className="rounded border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.2)] p-3 open:border-[rgba(201,168,76,0.25)]">
+                <summary className="cursor-pointer select-none text-[0.75rem] tracking-[0.12em] text-dim marker:text-dim">
+                  制作・撮影（非公開）— クリックで開く
+                </summary>
+                <div className="mt-3 space-y-3 border-t border-[rgba(255,255,255,0.06)] pt-3">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={!!cut.shootDone}
+                        onChange={(e) => updateCut(cut.id, { shootDone: e.target.checked })}
+                      />
+                      撮影済み（完了）
+                    </label>
+                    <p className="mt-1.5 pl-6 text-[0.75rem] leading-relaxed text-dim">
+                      このカットの実写撮影が終わったかを記録します（公開しません）。
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="w-full text-[0.65rem] tracking-[0.2em] text-[rgba(232,228,223,0.45)]">時間帯</span>
+                    {(
+                      [
+                        ["day", "昼"],
+                        ["night", "夜"],
+                        ["evening", "夕方"],
+                        ["flex", "昼/夜"],
+                      ] as const
+                    ).map(([val, lab]) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => updateCut(cut.id, { timeOfDay: cut.timeOfDay === val ? undefined : val })}
+                        className={`rounded-full px-3 py-1 text-xs ${
+                          cut.timeOfDay === val
+                            ? "bg-[rgba(224,90,51,0.35)] text-[#E8E4DF]"
+                            : "bg-[rgba(255,255,255,0.06)] text-dim hover:bg-[rgba(255,255,255,0.1)]"
+                        }`}
+                      >
+                        {lab}
+                      </button>
+                    ))}
+                    <span className="self-center text-xs text-dim">現在: {timeOfDayLabel(cut.timeOfDay)}</span>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Field label="カット名（内部）" value={cut.cutName || ""} onChange={(v) => updateCut(cut.id, { cutName: v })} rows={1} />
+                    <Field label="手法（実写 / AI 等）" value={cut.method || ""} onChange={(v) => updateCut(cut.id, { method: v })} rows={1} />
+                    <Field label="撮影日" value={cut.shootDate || ""} onChange={(v) => updateCut(cut.id, { shootDate: v })} rows={1} />
+                  </div>
+                  <div className="space-y-3">
+                    <Field label="カメラワーク" value={cut.camera || ""} onChange={(v) => updateCut(cut.id, { camera: v })} rows={2} />
+                    <Field label="内容（撮影メモ）" value={cut.contentAction || ""} onChange={(v) => updateCut(cut.id, { contentAction: v })} rows={2} />
+                    <Field label="スタッフ・撮影メモ（非公開）" value={cut.notes || ""} onChange={(v) => updateCut(cut.id, { notes: v })} rows={2} />
+                  </div>
                 </div>
-                <div className="mb-3 flex flex-wrap gap-2">
-                  <span className="w-full text-[0.65rem] tracking-[0.2em] text-[rgba(232,228,223,0.45)]">時間帯</span>
-                  {(
-                    [
-                      ["day", "昼"],
-                      ["night", "夜"],
-                      ["evening", "夕方"],
-                      ["flex", "昼/夜"],
-                    ] as const
-                  ).map(([val, lab]) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => updateCut(cut.id, { timeOfDay: cut.timeOfDay === val ? undefined : val })}
-                      className={`rounded-full px-3 py-1 text-xs ${
-                        cut.timeOfDay === val
-                          ? "bg-[rgba(224,90,51,0.35)] text-[#E8E4DF]"
-                          : "bg-[rgba(255,255,255,0.06)] text-dim hover:bg-[rgba(255,255,255,0.1)]"
-                      }`}
-                    >
-                      {lab}
-                    </button>
-                  ))}
-                  <span className="self-center text-xs text-dim">現在: {timeOfDayLabel(cut.timeOfDay)}</span>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="カット名（内部）" value={cut.cutName || ""} onChange={(v) => updateCut(cut.id, { cutName: v })} rows={1} />
-                  <Field label="手法（実写 / AI 等）" value={cut.method || ""} onChange={(v) => updateCut(cut.id, { method: v })} rows={1} />
-                  <Field label="撮影日" value={cut.shootDate || ""} onChange={(v) => updateCut(cut.id, { shootDate: v })} rows={1} />
-                </div>
-                <div className="mt-3 space-y-3">
-                  <Field label="カメラワーク" value={cut.camera || ""} onChange={(v) => updateCut(cut.id, { camera: v })} rows={2} />
-                  <Field label="内容（撮影メモ）" value={cut.contentAction || ""} onChange={(v) => updateCut(cut.id, { contentAction: v })} rows={2} />
-                  <Field label="スタッフ・撮影メモ（非公開）" value={cut.notes || ""} onChange={(v) => updateCut(cut.id, { notes: v })} rows={2} />
-                </div>
-              </div>
+              </details>
             </div>
           </article>
         ))}
       </section>
 
       <section className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6">
-        <h2 className="mb-3 text-xs tracking-[0.35em] text-dim">公開プロセスログ</h2>
-        <p className="mb-3 text-sm text-secondary">制作の一言を積み重ねます（新しいものが上に来ます）。閲覧ページにも表示されます。</p>
+        <h2 className="mb-3 text-xs tracking-[0.35em] text-dim">プロセスログ（編集のみ）</h2>
+        <p className="mb-3 text-sm text-secondary">
+          制作の一言を残せます（新しいものが上）。閲覧ページには出しません。データには保存されます。
+        </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <textarea
             value={processDraft}

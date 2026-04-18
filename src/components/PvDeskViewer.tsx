@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PV_BOARD_DEFAULT_SLUG,
   defaultPvBoardData,
+  getCutImageUrls,
   type PvBoardCut,
   type PvBoardData,
 } from "@/lib/pv-board";
@@ -13,6 +14,80 @@ function formatSecLabel(n?: number): string | null {
   if (n == null || !Number.isFinite(n)) return null;
   if (Number.isInteger(n)) return `${n}秒`;
   return `${n.toFixed(1)}秒`;
+}
+
+function CutImageCarousel({ urls }: { urls: string[] }) {
+  const [idx, setIdx] = useState(0);
+  const n = urls.length;
+
+  useEffect(() => {
+    if (idx >= n) setIdx(Math.max(0, n - 1));
+  }, [n, idx]);
+
+  if (n === 0) {
+    return (
+      <div className="flex h-full min-h-[160px] items-center justify-center p-4 text-center text-sm text-dim">
+        画像なし
+      </div>
+    );
+  }
+
+  if (n === 1) {
+    return (
+      <div className="h-full min-h-[160px] w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={urls[0]} alt="" className="h-full min-h-[160px] w-full object-cover" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full min-h-[200px] flex-col bg-black/20">
+      <div className="relative min-h-0 flex-1">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={urls[idx]} alt="" className="h-full w-full object-contain" />
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-center gap-1 border-t border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.35)] px-2 py-2">
+        <button
+          type="button"
+          className="rounded border border-[rgba(255,255,255,0.15)] px-2 py-1.5 text-xs text-secondary hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-30"
+          disabled={idx === 0}
+          onClick={() => setIdx(0)}
+          aria-label="最初の画像へ"
+        >
+          ≪
+        </button>
+        <button
+          type="button"
+          className="rounded border border-[rgba(255,255,255,0.15)] px-2 py-1.5 text-xs text-secondary hover:bg-[rgba(255,255,255,0.06)]"
+          onClick={() => setIdx((i) => (i - 1 + n) % n)}
+          aria-label="前の画像"
+        >
+          ＜
+        </button>
+        <span className="min-w-[4rem] px-2 text-center text-xs tabular-nums text-dim">
+          {idx + 1} / {n}
+        </span>
+        <button
+          type="button"
+          className="rounded border border-[rgba(255,255,255,0.15)] px-2 py-1.5 text-xs text-secondary hover:bg-[rgba(255,255,255,0.06)]"
+          onClick={() => setIdx((i) => (i + 1) % n)}
+          aria-label="次の画像"
+        >
+          ＞
+        </button>
+        <button
+          type="button"
+          className="rounded border border-[rgba(255,255,255,0.15)] px-2 py-1.5 text-xs text-secondary hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-30"
+          disabled={idx === n - 1}
+          onClick={() => setIdx(n - 1)}
+          aria-label="最後の画像へ"
+        >
+          ≫
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function CutAudioPublic({ cut }: { cut: PvBoardCut }) {
@@ -99,9 +174,7 @@ export default function PvDeskViewer() {
         <h1 className="font-shippori text-2xl font-bold tracking-tight md:text-3xl">{board.title}</h1>
         {updatedAt ? (
           <p className="mt-3 text-xs text-dim">更新: {new Date(updatedAt).toLocaleString("ja-JP")}</p>
-        ) : (
-          <p className="mt-3 text-xs text-dim">データはまだサーバーにありません（編集ページから保存すると反映されます）。</p>
-        )}
+        ) : null}
       </header>
 
       {youtubeId ? (
@@ -158,15 +231,8 @@ export default function PvDeskViewer() {
               className="overflow-hidden rounded-xl border border-[rgba(255,255,255,0.1)] bg-[#0D0F12] shadow-[0_8px_40px_rgba(0,0,0,0.35)]"
             >
               <div className="grid gap-0 md:grid-cols-[minmax(0,280px)_1fr]">
-                <div className="relative aspect-video w-full bg-[rgba(255,255,255,0.03)] md:aspect-auto md:min-h-[200px]">
-                  {cut.thumbnailUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cut.thumbnailUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full min-h-[160px] items-center justify-center p-4 text-center text-sm text-dim">
-                      画像なし
-                    </div>
-                  )}
+                <div className="relative flex aspect-video w-full flex-col bg-[rgba(255,255,255,0.03)] md:aspect-auto md:min-h-[220px]">
+                  <CutImageCarousel urls={getCutImageUrls(cut)} />
                 </div>
                 <div className="flex flex-col gap-4 p-6">
                   <div>
@@ -220,20 +286,6 @@ export default function PvDeskViewer() {
           ))
         )}
       </section>
-
-      {board.processLog.length > 0 ? (
-        <section className="rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0D0F12] p-6">
-          <h2 className="mb-4 text-xs tracking-[0.35em] text-dim">制作の記録</h2>
-          <ul className="space-y-4">
-            {board.processLog.map((e, i) => (
-              <li key={`${e.at}-${i}`} className="border-b border-[rgba(255,255,255,0.06)] pb-4 last:border-0 last:pb-0">
-                <time className="block text-xs text-dim">{new Date(e.at).toLocaleString("ja-JP")}</time>
-                <p className="mt-1 text-sm leading-relaxed text-secondary">{e.message}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
     </div>
   );
 }

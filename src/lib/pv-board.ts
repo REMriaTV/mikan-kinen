@@ -31,9 +31,19 @@ export type PvBoardCut = {
   audioStartSec?: number;
   /** 音源の終了秒（任意） */
   audioEndSec?: number;
-  /** Supabase Storage（pv-storyboard）の公開 URL */
+  /** 絵コンテ・参考画像（複数可・順序あり） */
+  imageUrls?: string[];
+  /** @deprecated 旧データ互換。読み込み時に imageUrls に取り込む */
   thumbnailUrl?: string;
 };
+
+/** カットに紐づく画像 URL を順序付きで返す（旧 thumbnailUrl を含む） */
+export function getCutImageUrls(cut: PvBoardCut): string[] {
+  const fromArr = cut.imageUrls?.filter((u): u is string => typeof u === "string" && !!u.trim());
+  if (fromArr && fromArr.length > 0) return fromArr.map((u) => u.trim());
+  if (cut.thumbnailUrl?.trim()) return [cut.thumbnailUrl.trim()];
+  return [];
+}
 
 export type PvProcessLogEntry = {
   at: string;
@@ -58,7 +68,6 @@ export function emptyPvBoardData(): PvBoardData {
 }
 
 export function defaultPvBoardData(): PvBoardData {
-  const now = new Date().toISOString();
   return {
     title: "町内環境 PV 制作進行",
     youtubeVideoId: "SmeUJFhZD0I",
@@ -91,12 +100,7 @@ export function defaultPvBoardData(): PvBoardData {
         shootDone: false,
       },
     ],
-    processLog: [
-      {
-        at: now,
-        message: "制作デスクを初期化しました（サンプル2カット入り）。不要なら削除して保存してください。",
-      },
-    ],
+    processLog: [],
   };
 }
 
@@ -147,6 +151,16 @@ function normalizeCut(raw: unknown, fallbackIndex: number): PvBoardCut | null {
     timeOfDay = timeOfDayRaw;
   }
 
+  let imageUrls: string[] = [];
+  if (Array.isArray(c.imageUrls)) {
+    for (const u of c.imageUrls) {
+      if (typeof u === "string" && u.trim()) imageUrls.push(u.trim());
+    }
+  }
+  if (imageUrls.length === 0 && typeof c.thumbnailUrl === "string" && c.thumbnailUrl.trim()) {
+    imageUrls = [c.thumbnailUrl.trim()];
+  }
+
   return {
     id,
     sortOrder,
@@ -169,6 +183,6 @@ function normalizeCut(raw: unknown, fallbackIndex: number): PvBoardCut | null {
     audioUrl: typeof c.audioUrl === "string" ? c.audioUrl : undefined,
     audioStartSec: typeof c.audioStartSec === "number" && Number.isFinite(c.audioStartSec) ? c.audioStartSec : undefined,
     audioEndSec: typeof c.audioEndSec === "number" && Number.isFinite(c.audioEndSec) ? c.audioEndSec : undefined,
-    thumbnailUrl: typeof c.thumbnailUrl === "string" ? c.thumbnailUrl : undefined,
+    imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
   };
 }
