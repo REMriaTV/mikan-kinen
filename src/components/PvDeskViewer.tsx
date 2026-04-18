@@ -5,6 +5,7 @@ import {
   PV_BOARD_DEFAULT_SLUG,
   defaultPvBoardData,
   getCutImageUrls,
+  getViewerAutoplayIntervalMs,
   type PvBoardCut,
   type PvBoardData,
 } from "@/lib/pv-board";
@@ -16,15 +17,15 @@ function formatSecLabel(n?: number): string | null {
   return `${n.toFixed(1)}秒`;
 }
 
-const SLIDE_MS = 3500;
-
 function CutImageCarousel({
   urls,
   autoplay = false,
+  slideIntervalMs = 3500,
 }: {
   urls: string[];
   /** 複数枚のとき、公開ページで自動で次の画像へ（GIF風。ホバーで一時停止） */
   autoplay?: boolean;
+  slideIntervalMs?: number;
 }) {
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -38,9 +39,9 @@ function CutImageCarousel({
     if (!autoplay || n <= 1 || paused) return;
     const id = window.setInterval(() => {
       setIdx((i) => (i + 1) % n);
-    }, SLIDE_MS);
+    }, slideIntervalMs);
     return () => window.clearInterval(id);
-  }, [autoplay, n, paused]);
+  }, [autoplay, n, paused, slideIntervalMs]);
 
   if (n === 0) {
     return (
@@ -94,7 +95,9 @@ function CutImageCarousel({
         </button>
         <span className="min-w-[4rem] px-2 text-center text-xs tabular-nums text-dim">
           {idx + 1} / {n}
-          {autoplay && n > 1 ? <span className="ml-1 text-[0.65rem] opacity-70">・{SLIDE_MS / 1000}秒</span> : null}
+          {autoplay && n > 1 ? (
+            <span className="ml-1 text-[0.65rem] opacity-70">・{(slideIntervalMs / 1000).toFixed(1)}秒</span>
+          ) : null}
         </span>
         <button
           type="button"
@@ -295,6 +298,7 @@ export default function PvDeskViewer() {
                   <CutImageCarousel
                     urls={getCutImageUrls(cut)}
                     autoplay={board.viewerImageAutoplay === true}
+                    slideIntervalMs={getViewerAutoplayIntervalMs(board)}
                   />
                 </div>
                 <div className="flex flex-col gap-4 p-6">

@@ -7,6 +7,7 @@ import {
   PV_BOARD_DEFAULT_SLUG,
   defaultPvBoardData,
   getCutImageUrls,
+  VIEWER_AUTOPLAY_INTERVAL_DEFAULT_SEC,
   type PvBoardCut,
   type PvBoardData,
   type PvTimeOfDay,
@@ -410,11 +411,33 @@ export default function PvDeskEditor() {
             <span>
               <span className="text-[#E8E4DF]">複数枚あるとき、自動で切り替え（スライド）</span>
               <span className="mt-1 block text-xs leading-relaxed text-dim">
-                ON にすると公開ページで約3.5秒ごとに次の画像へ進みます（GIFのような見え方。画像の上にマウスを置くと止まります）。
+                ON にすると公開ページで指定秒数ごとに次の画像へ進みます（GIFのような見え方。画像の上にマウスを置くと止まります）。
                 サーバーでGIFファイルは作りません。1枚だけのカットや、手動の≪＜＞≫は従来どおり使えます。
               </span>
             </span>
           </label>
+          {board.viewerImageAutoplay === true ? (
+            <label className="mt-4 block text-sm text-secondary">
+              <span className="mb-1 block text-[0.65rem] tracking-wider text-dim">切り替え間隔（秒）・1〜30</span>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                step={0.5}
+                value={board.viewerImageAutoplayIntervalSec ?? VIEWER_AUTOPLAY_INTERVAL_DEFAULT_SEC}
+                onChange={(e) => {
+                  const v = Number.parseFloat(e.target.value);
+                  setBoard({
+                    ...board,
+                    viewerImageAutoplayIntervalSec: Number.isFinite(v)
+                      ? Math.min(30, Math.max(1, v))
+                      : undefined,
+                  });
+                }}
+                className="w-28 rounded border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.35)] px-3 py-2 text-[#E8E4DF]"
+              />
+            </label>
+          ) : null}
         </div>
       </section>
 

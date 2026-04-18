@@ -61,7 +61,21 @@ export type PvBoardData = {
    * サーバーでGIFファイルは生成しない（画像URLを順に切り替えるだけ）。
    */
   viewerImageAutoplay?: boolean;
+  /** 自動スライドの間隔（秒）。未設定時は 3.5。1〜30 に丸める */
+  viewerImageAutoplayIntervalSec?: number;
 };
+
+/** 自動スライドのデフォルト間隔（秒） */
+export const VIEWER_AUTOPLAY_INTERVAL_DEFAULT_SEC = 3.5;
+
+export function getViewerAutoplayIntervalMs(data: Pick<PvBoardData, "viewerImageAutoplayIntervalSec">): number {
+  const s = data.viewerImageAutoplayIntervalSec;
+  if (typeof s === "number" && Number.isFinite(s)) {
+    const clamped = Math.min(30, Math.max(1, s));
+    return Math.round(clamped * 1000);
+  }
+  return Math.round(VIEWER_AUTOPLAY_INTERVAL_DEFAULT_SEC * 1000);
+}
 
 export function emptyPvBoardData(): PvBoardData {
   return {
@@ -122,6 +136,9 @@ export function normalizePvBoardData(raw: unknown): PvBoardData {
   }
   if (typeof o.viewerImageAutoplay === "boolean") {
     base.viewerImageAutoplay = o.viewerImageAutoplay;
+  }
+  if (typeof o.viewerImageAutoplayIntervalSec === "number" && Number.isFinite(o.viewerImageAutoplayIntervalSec)) {
+    base.viewerImageAutoplayIntervalSec = Math.min(30, Math.max(1, o.viewerImageAutoplayIntervalSec));
   }
 
   base.cuts = o.cuts
