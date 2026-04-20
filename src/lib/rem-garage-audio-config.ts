@@ -30,6 +30,10 @@ export const REM_GARAGE_SE_TRACKS: RemGarageSeItem[] = [
 export const REM_GARAGE_BGM_TRACKS: RemGarageBgmItem[] = [
   { id: "ambient-01", label: "Ambient 01", path: "/audio/bgm/ambient-01.mp3" },
   { id: "ambient-02", label: "Ambient 02", path: "/audio/bgm/ambient-02.mp3" },
+  { id: "earth-01", label: "Earth 01", path: "/audio/bgm/earth-01.mp3" },
+  { id: "healing-01", label: "Healing 01", path: "/audio/bgm/healing-01.mp3" },
+  { id: "healing-02", label: "Healing 02", path: "/audio/bgm/healing-02.mp3" },
+  { id: "healing-03", label: "Healing 03", path: "/audio/bgm/healing-03.mp3" },
   {
     id: "music-yashyamaru-chonaikankyou",
     label: "夜叉丸 室内環境",
